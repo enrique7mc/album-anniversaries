@@ -85,7 +85,7 @@ export class SpotifyService {
     );
 
     forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
-      const albums: Album[] = data.flat().map(item => ({
+      const albums: Album[] = this.flatten(data).map(item => ({
         id: item.id,
         artist_id: item.artist_id,
         name: item.name,
@@ -99,20 +99,21 @@ export class SpotifyService {
     });
   }
 
-  // fetchAlbums(accessToken: string, artistIds: string[]): Observable<any[]> {
-  //   const httpOptions = {
-  //     headers: new HttpHeaders({
-  //       Authorization: `Bearer ${accessToken}`
-  //     })
-  //   };
-
-  //   const artistAlbumRequests: Observable<any>[] = artistIds.map(id =>
-  //     this.http.get(
-  //       `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album`,
-  //       httpOptions
-  //     )
-  //   );
-
-  //   return forkJoin(artistAlbumRequests);
-  // }
+  // TODO(me): replace with array.flat()
+  flatten(input) {
+    const stack = [...input];
+    const res = [];
+    while (stack.length) {
+      // pop value from stack
+      const next = stack.pop();
+      if (Array.isArray(next)) {
+        // push back array items, won't modify the original input
+        stack.push(...next);
+      } else {
+        res.push(next);
+      }
+    }
+    //reverse to restore input order
+    return res.reverse();
+  }
 }
