@@ -1,0 +1,52 @@
+// this.http.get('https://api.spotify.com/v1/me', httpOptions)
+//   .subscribe(data => {
+//     console.log(data);
+//     this.user = data;
+//   });
+
+// this.http.get('https://api.spotify.com/v1/me/top/artists?limit=50', httpOptions)
+//   .subscribe(data => {
+//     this.response = data;
+//   });
+
+/*
+this.http.get(artistsUrl).subscribe((data: any) => {
+  this.artists = data.items.slice(0, 5);
+  let artistIds = this.artists.map(a => a.id);
+
+  // for each artist retrieve the albums (in parallel)
+  // this.http.get(`https://api.spotify.com/v1/artists/${artistIds[0]}/albums?include_groups=album`, httpOptions)
+  //   .subscribe((data: any) => {
+  //     this.artists[0].albums = data.items;
+  //     this.loading = false;
+  //   });
+
+  this.loading = false;
+});
+*/
+
+// this.spotifyService.fetchAlbums(this.accessToken).subscribe(data => {
+//   console.log(data);
+// });
+
+fetchArtists(accessToken: string): Observable<Artist[]> {
+    const httpOptions = {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${accessToken}`
+      })
+    };
+
+    return this.http.get(artistsUrl).pipe(
+      mergeMap((data: any) => {
+        return data.items.slice(0, 5).map(item => {
+          return {
+            id: item.id,
+            href: item.href,
+            name: item.name,
+            images: item.images,
+            popularity: item.popularity
+          };
+        });
+      })
+    );
+  }

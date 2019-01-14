@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import {client_id, redirect_uri, scope, stateKey, artistsUrl } from './constants';
+import { client_id, redirect_uri, scope, stateKey } from './constants';
+import { SpotifyService } from './spotify.service';
+import { Observable } from 'rxjs/Observable';
+import { Artist } from './artist';
+import { Album } from './album';
 
 @Component({
   selector: 'app-root',
@@ -13,12 +17,17 @@ export class AppComponent implements OnInit {
   params = null;
   accessToken: string;
   user: any;
-  artists: Array<any>;
+  $albums: Observable<Album[]>;
+  $artists: Observable<Artist[]>;
   loading: boolean = false;
+  response: any;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private spotifyService: SpotifyService
+  ) {}
 
-  ngOnInit() { 
+  ngOnInit() {
     this.params = this.getHashParams();
     this.accessToken = this.params['access_token'];
 
@@ -31,36 +40,25 @@ export class AppComponent implements OnInit {
     if (this.accessToken) {
       const httpOptions = {
         headers: new HttpHeaders({
-          'Authorization': `Bearer ${this.accessToken}`
+          Authorization: `Bearer ${this.accessToken}`
         })
       };
 
-      // this.http.get('https://api.spotify.com/v1/me', httpOptions)
-      //   .subscribe(data => {
-      //     console.log(data);
-      //     this.user = data;
-      //   });
-      
-      // this.http.get('https://api.spotify.com/v1/me/top/artists?limit=50', httpOptions)
-      //   .subscribe(data => {
-      //     this.response = data;
-      //   });
-      this.loading = true;
+      this.$albums = this.spotifyService.albums;
+      this.$artists = this.spotifyService.artists;
+      this.spotifyService.loadArtists(this.accessToken);
 
-      this.http.get(artistsUrl)
-        .subscribe((data: any) => {
-          this.artists = data.items.slice(0, 5);
-          let artistIds = this.artists.map(a => a.id);
+      this.$artists.subscribe(artists => {
+        this.spotifyService.loadAlbums(
+          this.accessToken,
+          artists.map(a => a.id)
+        );
+      });
 
-          // for each artist retrieve the albums (in parallel)
-          // this.http.get(`https://api.spotify.com/v1/artists/${artistIds[0]}/albums?include_groups=album`, httpOptions)
-          //   .subscribe((data: any) => {
-          //     this.artists[0].albums = data.items;
-          //     this.loading = false;
-          //   });
-
-          this.loading = false;
-        });
+      // this.spotifyService.fetchAlbumsLocal().subscribe(data => {
+      //   console.log(data);
+      //   this.loading = false;
+      // });
     }
   }
 
@@ -68,27 +66,29 @@ export class AppComponent implements OnInit {
     let state = this.params['state'];
     let storedState = localStorage.getItem(stateKey);
     console.log(this.accessToken, state, storedState);
-    return this.accessToken && (state == null || state !== storedState)
+    return this.accessToken && (state == null || state !== storedState);
   }
 
   getHashParams(): any {
     let hashParams = {};
-    var e, r = /([^&;=]+)=?([^&;]*)/g,
-        q = window.location.hash.substring(1);
-    while ( e = r.exec(q)) {
-       hashParams[e[1]] = decodeURIComponent(e[2]);
+    var e,
+      r = /([^&;=]+)=?([^&;]*)/g,
+      q = window.location.hash.substring(1);
+    while ((e = r.exec(q))) {
+      hashParams[e[1]] = decodeURIComponent(e[2]);
     }
     return hashParams;
   }
 
   generateRandomString(length): string {
     let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const possible =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
       text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
-  };
+  }
 
   login() {
     let state = this.generateRandomString(16);
@@ -103,5 +103,4 @@ export class AppComponent implements OnInit {
     console.log(url);
     window.location.href = url;
   }
-
 }
