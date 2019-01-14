@@ -5,6 +5,7 @@ import { mergeMap } from 'rxjs/operators';
 import { forkJoin } from "rxjs/observable/forkJoin";
 import { artistsUrl } from './constants';
 
+// TODO(me): remove class
 @Injectable()
 export class AppService {
   constructor(private http: HttpClient) { }

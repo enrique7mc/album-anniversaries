@@ -53,11 +53,13 @@ export class AppComponent implements OnInit {
           let artistIds = this.artists.map(a => a.id);
 
           // for each artist retrieve the albums (in parallel)
-          this.http.get(`https://api.spotify.com/v1/artists/${artistIds[0]}/albums?include_groups=album`, httpOptions)
-            .subscribe((data: any) => {
-              this.artists[0].albums = data.items;
-              this.loading = false;
-            });
+          // this.http.get(`https://api.spotify.com/v1/artists/${artistIds[0]}/albums?include_groups=album`, httpOptions)
+          //   .subscribe((data: any) => {
+          //     this.artists[0].albums = data.items;
+          //     this.loading = false;
+          //   });
+
+          this.loading = false;
         });
     }
   }
