@@ -54,11 +54,6 @@ export class AppComponent implements OnInit {
           artists.map(a => a.id)
         );
       });
-
-      // this.spotifyService.fetchAlbumsLocal().subscribe(data => {
-      //   console.log(data);
-      //   this.loading = false;
-      // });
     }
   }
 
@@ -99,8 +94,6 @@ export class AppComponent implements OnInit {
     url += `&scope=${encodeURIComponent(scope)}`;
     url += `&redirect_uri=${encodeURIComponent(redirect_uri)}`;
     url += `&state=${encodeURIComponent(state)}`;
-
-    console.log(url);
     window.location.href = url;
   }
 }

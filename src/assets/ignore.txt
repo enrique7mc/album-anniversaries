@@ -50,3 +50,12 @@ fetchArtists(accessToken: string): Observable<Artist[]> {
       })
     );
   }
+
+<mat-list>
+    <mat-list-item *ngFor="let album of ($albums | async)">
+      <div *ngIf="album.artist_id === artist.id">
+        <mat-icon matListIcon>album</mat-icon>
+        <span>{{ album.name }}</span>
+      </div>
+      </mat-list-item>
+</mat-list>

@@ -1,23 +1,25 @@
-<div style="text-align:center">
-  <h1>Welcome to {{ title }}!</h1>
+<mat-toolbar> <span>Spotify demo</span> </mat-toolbar>
+<div>
   <h2>{{ user?.display_name }}</h2>
-  <img
-    width="300"
-    alt="Angular Logo"
-    src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg=="
-  />
   <div *ngIf="!loading">
-    <div *ngFor="let artist of ($artists | async)">
-      <h1>{{ artist.name }}</h1>
+    <mat-card class="artist-card" *ngFor="let artist of ($artists | async)">
+      <mat-card-header>
+        <mat-card-title>{{ artist.name }}</mat-card-title>
+      </mat-card-header>
+      <img [src]="artist.images[1].url" alt="name photo" />
       <p>Id: {{ artist.id }}</p>
       <p>Popularity: {{ artist.popularity }}</p>
-      <ul>
+      <mat-list>
         <div *ngFor="let album of ($albums | async)">
-          <li *ngIf="album.artist_id === artist.id">{{ album.name }}</li>
+          <mat-list-item *ngIf="album.artist_id === artist.id">
+            <img matListAvatar [src]="album.images[2].url" alt="artwork" />
+            <span>{{ album.name }}</span>
+          </mat-list-item>
         </div>
-      </ul>
-      <img [src]="artist.images[1].url" alt="artist photo" />
-    </div>
+      </mat-list>
+    </mat-card>
   </div>
 </div>
-<button *ngIf="!accessToken" (click)="login()">Login</button>
+<button mat-button color="primary" *ngIf="!accessToken" (click)="login()">
+  Login
+</button>
