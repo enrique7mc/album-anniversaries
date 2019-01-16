@@ -4,7 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import { mergeMap } from 'rxjs/operators';
 import { map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs/observable/forkJoin';
-import { albumsUrl, artistsUrl } from './constants';
+import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
 import { BehaviorSubject } from 'rxjs';
 import { Album } from './album';
@@ -13,6 +13,7 @@ import { Album } from './album';
   providedIn: 'root'
 })
 export class SpotifyService {
+  private isDev = false;
   private _albums: BehaviorSubject<Album[]>;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
@@ -34,8 +35,20 @@ export class SpotifyService {
     return this._artists.asObservable();
   }
 
+  get artistsUrl(): string {
+    return this.isDev
+      ? artistsLocalUrl
+      : 'https://api.spotify.com/v1/me/top/artists?limit=50';
+  }
+
+  albumsUrl(artistId): string {
+    return this.isDev
+      ? albumsLocalUrl
+      : `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album`;
+  }
+
   fetchAlbumsLocal() {
-    return this.http.get(albumsUrl);
+    return this.http.get(albumsLocalUrl);
   }
 
   loadArtists(accessToken: string): void {
@@ -45,16 +58,17 @@ export class SpotifyService {
       })
     };
 
-    this.http.get(artistsUrl).subscribe((data: any) => {
-      const artists: Artist[] = data.items.slice(0, 5).map(item => {
-        return {
-          id: item.id,
-          href: item.href,
-          name: item.name,
-          images: item.images,
-          popularity: item.popularity
-        };
-      });
+    this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
+      const artists: Artist[] = data.items /*.slice(0, 5)*/
+        .map(item => {
+          return {
+            id: item.id,
+            href: item.href,
+            name: item.name,
+            images: item.images,
+            popularity: item.popularity
+          };
+        });
 
       this.dataStore.artists = artists;
       this._artists.next(Object.assign({}, this.dataStore).artists);
@@ -85,7 +99,9 @@ export class SpotifyService {
     );
 
     forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
-      const albums: Album[] = this.flatten(data)
+      const flattenedAlbums = this.flatten(data);
+      console.log(flattenedAlbums);
+      const albums: Album[] = flattenedAlbums
         .filter(item => item.release_date_precision === 'day')
         .map(item => ({
           id: item.id,
