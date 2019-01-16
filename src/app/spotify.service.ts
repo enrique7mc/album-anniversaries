@@ -85,14 +85,17 @@ export class SpotifyService {
     );
 
     forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
-      const albums: Album[] = this.flatten(data).map(item => ({
-        id: item.id,
-        artist_id: item.artist_id,
-        name: item.name,
-        release_date: item.release_date,
-        release_date_precision: item.release_date_precision,
-        images: item.images
-      }));
+      const albums: Album[] = this.flatten(data)
+        .filter(item => item.release_date_precision === 'day')
+        .map(item => ({
+          id: item.id,
+          artist_id: item.artist_id,
+          name: item.name,
+          release_date: item.release_date,
+          release_date_precision: item.release_date_precision,
+          images: item.images,
+          external_url: item.external_urls.spotify
+        }));
 
       this.dataStore.albums = albums;
       this._albums.next(Object.assign({}, this.dataStore).albums);

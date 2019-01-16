@@ -1,5 +1,5 @@
-<mat-toolbar> <span>Spotify demo</span> </mat-toolbar>
-<div>
+<mat-toolbar> <span>Album aniversaries!</span> </mat-toolbar>
+<div class="container">
   <h2>{{ user?.display_name }}</h2>
   <div *ngIf="!loading">
     <mat-card class="artist-card" *ngFor="let artist of ($artists | async)">
@@ -7,19 +7,20 @@
         <mat-card-title>{{ artist.name }}</mat-card-title>
       </mat-card-header>
       <img [src]="artist.images[1].url" alt="name photo" />
-      <p>Id: {{ artist.id }}</p>
-      <p>Popularity: {{ artist.popularity }}</p>
-      <mat-list>
+      <mat-nav-list>
         <div *ngFor="let album of ($albums | async)">
           <mat-list-item *ngIf="album.artist_id === artist.id">
             <img matListAvatar [src]="album.images[2].url" alt="artwork" />
-            <span>{{ album.name }}</span>
+            <a matLine [href]="album.external_url" target="_blank">{{
+              album.name
+            }}</a>
+            <span matLine>{{ album.release_date }}</span>
           </mat-list-item>
         </div>
-      </mat-list>
+      </mat-nav-list>
     </mat-card>
   </div>
+  <button mat-button color="primary" *ngIf="!accessToken" (click)="login()">
+    Login
+  </button>
 </div>
-<button mat-button color="primary" *ngIf="!accessToken" (click)="login()">
-  Login
-</button>

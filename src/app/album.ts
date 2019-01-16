@@ -7,4 +7,5 @@ export interface Album {
   release_date: string;
   release_date_precision: string;
   images: Image[];
+  external_url: string;
 }

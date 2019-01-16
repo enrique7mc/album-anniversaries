@@ -1,5 +1,15 @@
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
+.container {
+  width: 50%;
+  margin: 0 auto;
+}
+
 .artist-card {
-  max-width: 320px;
+  margin: 10px 0;
+}
+
+.artist-card img {
+  display: block;
+  margin: auto;
 }
