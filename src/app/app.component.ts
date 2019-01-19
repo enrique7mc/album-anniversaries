@@ -13,7 +13,7 @@ import { Album } from './album';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  title = 'spotify-demo';
+  title = 'Album aniversaries!';
   params = null;
   accessToken: string;
   user: any;
@@ -51,7 +51,8 @@ export class AppComponent implements OnInit {
       this.$artists.subscribe(artists => {
         this.spotifyService.loadAlbums(
           this.accessToken,
-          artists.map(a => a.id)
+          artists.map(a => a.id),
+          true
         );
       });
     }

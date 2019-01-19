@@ -6,4 +6,5 @@ export interface Artist {
   name: string;
   popularity: number;
   images: Image[];
+  external_url: string;
 }

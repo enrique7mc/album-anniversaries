@@ -13,7 +13,7 @@ import { Album } from './album';
   providedIn: 'root'
 })
 export class SpotifyService {
-  private isDev = false;
+  private isDev = true;
   private _albums: BehaviorSubject<Album[]>;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
@@ -59,23 +59,27 @@ export class SpotifyService {
     };
 
     this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
-      const artists: Artist[] = data.items /*.slice(0, 5)*/
-        .map(item => {
-          return {
-            id: item.id,
-            href: item.href,
-            name: item.name,
-            images: item.images,
-            popularity: item.popularity
-          };
-        });
+      const artists: Artist[] = data.items.slice(0, 10).map(item => {
+        return {
+          id: item.id,
+          href: item.href,
+          name: item.name,
+          images: item.images,
+          popularity: item.popularity,
+          external_url: item.external_urls.spotify
+        };
+      });
 
       this.dataStore.artists = artists;
       this._artists.next(Object.assign({}, this.dataStore).artists);
     });
   }
 
-  loadAlbums(accessToken: string, artistIds: string[]): void {
+  loadAlbums(
+    accessToken: string,
+    artistIds: string[],
+    filterByDate: boolean = false
+  ): void {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: `Bearer ${accessToken}`
@@ -100,9 +104,11 @@ export class SpotifyService {
 
     forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
       const flattenedAlbums = this.flatten(data);
-      console.log(flattenedAlbums);
       const albums: Album[] = flattenedAlbums
         .filter(item => item.release_date_precision === 'day')
+        .filter(item =>
+          filterByDate ? this.albumReleasedPastYear(item) : true
+        )
         .map(item => ({
           id: item.id,
           artist_id: item.artist_id,
@@ -116,6 +122,23 @@ export class SpotifyService {
       this.dataStore.albums = albums;
       this._albums.next(Object.assign({}, this.dataStore).albums);
     });
+  }
+
+  // TODO(me): refactor this to make more generic
+  albumReleasedPastWeek(album: Album): boolean {
+    const albumDate = new Date(album.release_date);
+    const now = Date.now();
+    const millisecondsInAWeek = 604800000;
+
+    return Math.abs(now - albumDate.getMilliseconds()) < millisecondsInAWeek;
+  }
+
+  albumReleasedPastYear(album: Album): boolean {
+    const albumDate = new Date(album.release_date);
+    const now = Date.now();
+    const millisecondsInAYear = 31536000000;
+
+    return Math.abs(now - albumDate.getTime()) < millisecondsInAYear;
   }
 
   // TODO(me): replace with array.flat()
