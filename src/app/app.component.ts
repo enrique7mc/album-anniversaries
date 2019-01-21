@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { client_id, redirect_uri, scope, stateKey } from './constants';
@@ -8,19 +8,21 @@ import { Artist } from './artist';
 import { Album } from './album';
 import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
-  title = 'Album aniversaries!';
+export class AppComponent implements OnInit, OnDestroy {
+  title: string;
   params = null;
   accessToken: string;
-  user: any;
-  $albums: Observable<Album[]>;
-  $artists: Observable<Artist[]>;
+  albums: Album[];
+  artists: Artist[];
+  albumsSubscription: Subscription;
+  artistsSubscription: Subscription;
   loading: boolean = false;
   response: any;
 
@@ -28,7 +30,9 @@ export class AppComponent implements OnInit {
     private http: HttpClient,
     private spotifyService: SpotifyService,
     @Inject(APP_CONFIG) private config: AppConfig
-  ) {}
+  ) {
+    this.title = config.title;
+  }
 
   ngOnInit() {
     this.params = this.getHashParams();
@@ -40,6 +44,7 @@ export class AppComponent implements OnInit {
     }
 
     // localStorage.removeItem(stateKey);
+
     if (this.accessToken) {
       const httpOptions = {
         headers: new HttpHeaders({
@@ -47,18 +52,34 @@ export class AppComponent implements OnInit {
         })
       };
 
-      this.$albums = this.spotifyService.albums;
-      this.$artists = this.spotifyService.artists;
+      this.loading = true;
       this.spotifyService.loadArtists(this.accessToken);
 
-      this.$artists.subscribe(artists => {
-        this.spotifyService.loadAlbums(
-          this.accessToken,
-          artists.map(a => a.id),
-          true
-        );
+      this.artistsSubscription = this.spotifyService.artists.subscribe(
+        artists => {
+          this.artists = artists;
+          this.spotifyService.loadAlbums(
+            this.accessToken,
+            artists.map(a => a.id),
+            true
+          );
+        }
+      );
+
+      // TODO(me): improve observable subscription logic.
+      this.albumsSubscription = this.spotifyService.albums.subscribe(albums => {
+        this.albums = albums;
+        this.artists = this.artists.filter(artist => {
+          return this.albums.some(a => a.artist_id === artist.id);
+        });
+        this.loading = false;
       });
     }
+  }
+
+  ngOnDestroy() {
+    this.albumsSubscription.unsubscribe();
+    this.artistsSubscription.unsubscribe();
   }
 
   get authError(): boolean {

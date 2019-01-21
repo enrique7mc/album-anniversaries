@@ -93,7 +93,7 @@ export class SpotifyService {
     const artistAlbumRequests: Observable<any>[] = artistIds.map(id =>
       this.http
         .get(
-          `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album`,
+          `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`,
           httpOptions
         )
         .pipe(

@@ -4,14 +4,14 @@
 <div class="container">
   <h1>Checkout the most recent albums from artists you like</h1>
   <div *ngIf="!loading">
-    <mat-card class="artist-card" *ngFor="let artist of ($artists | async)">
+    <mat-card class="artist-card" *ngFor="let artist of artists">
       <mat-card-header>
         <mat-card-title>{{ artist.name }}</mat-card-title>
       </mat-card-header>
       <img mat-card-image [src]="artist.images[0].url" alt="name photo" />
       <mat-card-content>
         <mat-nav-list>
-          <div *ngFor="let album of ($albums | async)">
+          <div *ngFor="let album of albums">
             <mat-list-item *ngIf="album.artist_id === artist.id">
               <img
                 class="avatar"
