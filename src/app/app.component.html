@@ -1,9 +1,14 @@
 <mat-toolbar color="primary">
   <span>{{ title }}</span>
 </mat-toolbar>
+<mat-progress-bar
+  *ngIf="loading"
+  color="primary"
+  mode="indeterminate"
+></mat-progress-bar>
 <div class="container">
-  <h1>Checkout the most recent albums from artists you like</h1>
   <div *ngIf="!loading">
+    <h1>Checkout the most recent albums from artists you like</h1>
     <mat-card class="artist-card" *ngFor="let artist of artists">
       <mat-card-header>
         <mat-card-title>{{ artist.name }}</mat-card-title>
