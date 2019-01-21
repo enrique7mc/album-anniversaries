@@ -1,11 +1,25 @@
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
-.container {
-  width: 50%;
-  margin: 0 auto;
+@media only screen and (min-device-width: 320px) and (max-device-width: 800px) {
+  .container {
+    width: 80%;
+    margin: 0 auto;
+  }
+
+  .artist-card {
+    margin: 5px 0;
+    max-width: 460px;
+  }
 }
 
-.artist-card {
-  margin: 10px 0;
-  max-width: 500px;
+@media only screen and (min-device-width: 800px) {
+  .container {
+    width: 50%;
+    margin: 0 auto;
+  }
+
+  .artist-card {
+    margin: 10px 0;
+    max-width: 500px;
+  }
 }
