@@ -1,4 +1,5 @@
 import { Image } from './image';
+import { Album } from './album';
 
 export interface Artist {
   id: string;
@@ -7,4 +8,5 @@ export interface Artist {
   popularity: number;
   images: Image[];
   external_url: string;
+  albums?: Album[];
 }

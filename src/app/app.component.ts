@@ -19,9 +19,7 @@ export class AppComponent implements OnInit, OnDestroy {
   title: string;
   params = null;
   accessToken: string;
-  albums: Album[];
   artists: Artist[];
-  albumsSubscription: Subscription;
   artistsSubscription: Subscription;
   loading: boolean = false;
   response: any;
@@ -46,39 +44,19 @@ export class AppComponent implements OnInit, OnDestroy {
     // localStorage.removeItem(stateKey);
 
     if (this.accessToken) {
-      const httpOptions = {
-        headers: new HttpHeaders({
-          Authorization: `Bearer ${this.accessToken}`
-        })
-      };
-
       this.loading = true;
-      this.spotifyService.loadArtists(this.accessToken);
+      this.spotifyService.loadArtistsWithAlbums(this.accessToken, true);
 
       this.artistsSubscription = this.spotifyService.artists.subscribe(
         artists => {
           this.artists = artists;
-          this.spotifyService.loadAlbums(
-            this.accessToken,
-            artists.map(a => a.id),
-            true
-          );
+          this.loading = false;
         }
       );
-
-      // TODO(me): improve observable subscription logic.
-      this.albumsSubscription = this.spotifyService.albums.subscribe(albums => {
-        this.albums = albums;
-        this.artists = this.artists.filter(artist => {
-          return this.albums.some(a => a.artist_id === artist.id);
-        });
-        this.loading = false;
-      });
     }
   }
 
   ngOnDestroy() {
-    this.albumsSubscription.unsubscribe();
     this.artistsSubscription.unsubscribe();
   }
 

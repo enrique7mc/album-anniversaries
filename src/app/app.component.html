@@ -16,7 +16,7 @@
       <img mat-card-image [src]="artist.images[0].url" alt="name photo" />
       <mat-card-content>
         <mat-nav-list>
-          <div *ngFor="let album of albums">
+          <div *ngFor="let album of artist.albums">
             <mat-list-item *ngIf="album.artist_id === artist.id">
               <img
                 class="avatar"

@@ -15,22 +15,15 @@ import { AppConfig, APP_CONFIG } from './app-config';
 })
 export class SpotifyService {
   private isDev: boolean;
-  private _albums: BehaviorSubject<Album[]>;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
-    albums: Album[];
     artists: Artist[];
   };
 
   constructor(private http: HttpClient, @Inject(APP_CONFIG) config: AppConfig) {
     this.isDev = config.isDev;
-    this.dataStore = { albums: [], artists: [] };
-    this._albums = <BehaviorSubject<Album[]>>new BehaviorSubject([]);
+    this.dataStore = { artists: [] };
     this._artists = <BehaviorSubject<Artist[]>>new BehaviorSubject([]);
-  }
-
-  get albums() {
-    return this._albums.asObservable();
   }
 
   get artists() {
@@ -43,13 +36,10 @@ export class SpotifyService {
       : 'https://api.spotify.com/v1/me/top/artists?limit=50';
   }
 
-  albumsUrl(artistId): string {
-    return this.isDev
-      ? albumsLocalUrl
-      : `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album`;
-  }
-
-  loadArtists(accessToken: string): void {
+  loadArtistsWithAlbums(
+    accessToken: string,
+    filterByDate: boolean = false
+  ): void {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: `Bearer ${accessToken}`
@@ -70,61 +60,60 @@ export class SpotifyService {
           name: item.name,
           images: item.images,
           popularity: item.popularity,
-          external_url: item.external_urls.spotify
+          external_url: item.external_urls.spotify,
+          albums: []
         };
       });
 
-      this.dataStore.artists = artists;
-      this._artists.next(Object.assign({}, this.dataStore).artists);
-    });
-  }
+      const artistAlbumRequests: Observable<any>[] = artists
+        .map(a => a.id)
+        .map(id =>
+          this.http
+            .get(
+              `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`,
+              httpOptions
+            )
+            .pipe(
+              map((data: any) => {
+                const albums: Album[] = data.items.map(item =>
+                  Object.assign({}, item, { artist_id: id })
+                );
+                return albums;
+              })
+            )
+        );
 
-  loadAlbums(
-    accessToken: string,
-    artistIds: string[],
-    filterByDate: boolean = false
-  ): void {
-    const httpOptions = {
-      headers: new HttpHeaders({
-        Authorization: `Bearer ${accessToken}`
-      })
-    };
+      forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
+        const flattenedAlbums = this.flatten(data);
+        const albums: Album[] = flattenedAlbums
+          .filter(item => item.release_date_precision === 'day')
+          .filter(item =>
+            filterByDate ? this.albumReleasedPastYear(item) : true
+          )
+          .map(item => ({
+            id: item.id,
+            artist_id: item.artist_id,
+            name: item.name,
+            release_date: item.release_date,
+            release_date_precision: item.release_date_precision,
+            images: item.images,
+            external_url: item.external_urls.spotify
+          }));
 
-    const artistAlbumRequests: Observable<any>[] = artistIds.map(id =>
-      this.http
-        .get(
-          `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`,
-          httpOptions
-        )
-        .pipe(
-          map((data: any) => {
-            const albums: Album[] = data.items.map(item =>
-              Object.assign({}, item, { artist_id: id })
-            );
-            return albums;
-          })
-        )
-    );
+        albums.forEach(album => {
+          const matchingArtist = artists.find(a => a.id === album.artist_id);
+          if (!matchingArtist) {
+            console.log(`No matching artist for album ${album.id}`);
+          }
 
-    forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
-      const flattenedAlbums = this.flatten(data);
-      const albums: Album[] = flattenedAlbums
-        .filter(item => item.release_date_precision === 'day')
-        .filter(item =>
-          filterByDate ? this.albumReleasedPastYear(item) : true
-        )
-        .map(item => ({
-          id: item.id,
-          artist_id: item.artist_id,
-          name: item.name,
-          release_date: item.release_date,
-          release_date_precision: item.release_date_precision,
-          images: item.images,
-          external_url: item.external_urls.spotify
-        }));
+          matchingArtist.albums.push(album);
+        });
 
-      this.dataStore.albums = albums;
-      this._albums.next(Object.assign({}, this.dataStore).albums);
+        this.dataStore.artists = artists.filter(
+          artist => artist.albums.length > 0
+        );
+        this._artists.next(Object.assign({}, this.dataStore).artists);
+      });
     });
   }
 
