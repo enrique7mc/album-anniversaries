@@ -36,10 +36,7 @@ export class SpotifyService {
       : 'https://api.spotify.com/v1/me/top/artists?limit=50';
   }
 
-  loadArtistsWithAlbums(
-    accessToken: string,
-    filterByDate: boolean = false
-  ): void {
+  loadArtistsWithAlbums(accessToken: string): void {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: `Bearer ${accessToken}`
@@ -87,8 +84,10 @@ export class SpotifyService {
         const flattenedAlbums = this.flatten(data);
         const albums: Album[] = flattenedAlbums
           .filter(item => item.release_date_precision === 'day')
-          .filter(item =>
-            filterByDate ? this.albumReleasedPastYear(item) : true
+          .filter(
+            item =>
+              this.albumHadBirthdayPastWeek(item) ||
+              this.albumReleasedPastYear(item)
           )
           .map(item => ({
             id: item.id,
@@ -118,16 +117,22 @@ export class SpotifyService {
   }
 
   // TODO(me): refactor this to make more generic
-  albumReleasedPastWeek(album: Album): boolean {
-    const albumDate = new Date(album.release_date);
-    const now = Date.now();
+  albumHadBirthdayPastWeek(album: Album): boolean {
+    const today = new Date(Date.now());
+    const albumDate = new Date(
+      Date.parse(`${album.release_date} 00:00:00 -0800`)
+    );
+    albumDate.setFullYear(today.getFullYear());
     const millisecondsInAWeek = 604800000;
+    const dateDiffMillis = today.getTime() - albumDate.getTime();
 
-    return Math.abs(now - albumDate.getMilliseconds()) < millisecondsInAWeek;
+    return dateDiffMillis > 0 && dateDiffMillis < millisecondsInAWeek;
   }
 
   albumReleasedPastYear(album: Album): boolean {
-    const albumDate = new Date(album.release_date);
+    const albumDate = new Date(
+      Date.parse(`${album.release_date} 00:00:00 -0800`)
+    );
     const now = Date.now();
     const millisecondsInAYear = 31536000000;
 

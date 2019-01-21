@@ -45,7 +45,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (this.accessToken) {
       this.loading = true;
-      this.spotifyService.loadArtistsWithAlbums(this.accessToken, true);
+      this.spotifyService.loadArtistsWithAlbums(this.accessToken);
 
       this.artistsSubscription = this.spotifyService.artists.subscribe(
         artists => {
