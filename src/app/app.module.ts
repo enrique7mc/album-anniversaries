@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { MatButtonModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
+import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 
 @NgModule({
   declarations: [AppComponent],
@@ -16,7 +17,7 @@ import { MaterialModule } from './material/material.module';
 
     MaterialModule
   ],
-  providers: [],
+  providers: [{ provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG }],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

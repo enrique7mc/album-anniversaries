@@ -6,6 +6,8 @@ import { SpotifyService } from './spotify.service';
 import { Observable } from 'rxjs/Observable';
 import { Artist } from './artist';
 import { Album } from './album';
+import { Inject } from '@angular/core';
+import { APP_CONFIG, AppConfig } from './app-config';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +26,8 @@ export class AppComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private spotifyService: SpotifyService
+    private spotifyService: SpotifyService,
+    @Inject(APP_CONFIG) private config: AppConfig
   ) {}
 
   ngOnInit() {
@@ -61,7 +64,7 @@ export class AppComponent implements OnInit {
   get authError(): boolean {
     let state = this.params['state'];
     let storedState = localStorage.getItem(stateKey);
-    console.log(this.accessToken, state, storedState);
+
     return this.accessToken && (state == null || state !== storedState);
   }
 
@@ -93,7 +96,7 @@ export class AppComponent implements OnInit {
     url += '?response_type=token';
     url += `&client_id=${encodeURIComponent(client_id)}`;
     url += `&scope=${encodeURIComponent(scope)}`;
-    url += `&redirect_uri=${encodeURIComponent(redirect_uri)}`;
+    url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
     url += `&state=${encodeURIComponent(state)}`;
     window.location.href = url;
   }

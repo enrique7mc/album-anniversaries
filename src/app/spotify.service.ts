@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { mergeMap } from 'rxjs/operators';
@@ -8,12 +8,13 @@ import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
 import { BehaviorSubject } from 'rxjs';
 import { Album } from './album';
+import { AppConfig, APP_CONFIG } from './app-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SpotifyService {
-  private isDev = false;
+  private isDev: boolean;
   private _albums: BehaviorSubject<Album[]>;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
@@ -21,7 +22,8 @@ export class SpotifyService {
     artists: Artist[];
   };
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, @Inject(APP_CONFIG) config: AppConfig) {
+    this.isDev = config.isDev;
     this.dataStore = { albums: [], artists: [] };
     this._albums = <BehaviorSubject<Album[]>>new BehaviorSubject([]);
     this._artists = <BehaviorSubject<Artist[]>>new BehaviorSubject([]);
@@ -47,10 +49,6 @@ export class SpotifyService {
       : `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album`;
   }
 
-  fetchAlbumsLocal() {
-    return this.http.get(albumsLocalUrl);
-  }
-
   loadArtists(accessToken: string): void {
     const httpOptions = {
       headers: new HttpHeaders({
@@ -59,7 +57,13 @@ export class SpotifyService {
     };
 
     this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
-      const artists: Artist[] = data.items.slice(0, 10).map(item => {
+      let artistsResponse = data.items;
+
+      if (this.isDev) {
+        artistsResponse = data.items.slice(0, 10);
+      }
+
+      const artists: Artist[] = artistsResponse.map(item => {
         return {
           id: item.id,
           href: item.href,

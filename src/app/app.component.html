@@ -2,7 +2,7 @@
   <span>{{ title }}</span>
 </mat-toolbar>
 <div class="container">
-  <h2>{{ user?.display_name }}</h2>
+  <h1>Checkout the most recent albums from artists you like</h1>
   <div *ngIf="!loading">
     <mat-card class="artist-card" *ngFor="let artist of ($artists | async)">
       <mat-card-header>
