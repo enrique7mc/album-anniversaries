@@ -8,8 +8,8 @@ export interface AppConfig {
 
 export const SPOTIFY_APP_CONFIG: AppConfig = {
   title: 'Album anniversaries!',
-  redirectUrl: 'http://localhost:4200',
-  isDev: true
+  redirectUrl: 'https://album-anniversaries.firebaseapp.com/',
+  isDev: false
 };
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('spotify-app.config');
