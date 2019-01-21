@@ -13,7 +13,7 @@ import { Album } from './album';
   providedIn: 'root'
 })
 export class SpotifyService {
-  private isDev = true;
+  private isDev = false;
   private _albums: BehaviorSubject<Album[]>;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
