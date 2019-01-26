@@ -7,7 +7,7 @@
   mode="indeterminate"
 ></mat-progress-bar>
 <div class="container">
-  <div *ngIf="!loading">
+  <div *ngIf="!loading && accessToken">
     <h1>Checkout these albums from artists you like</h1>
     <mat-card class="artist-card" *ngFor="let artist of artists">
       <mat-card-header>
@@ -44,7 +44,14 @@
       </mat-card-actions>
     </mat-card>
   </div>
-  <button mat-button color="primary" *ngIf="!accessToken" (click)="login()">
-    Login
-  </button>
+  <div class="login">
+    <button
+      mat-raised-button
+      color="primary"
+      *ngIf="!accessToken"
+      (click)="login()"
+    >
+      Login
+    </button>
+  </div>
 </div>
