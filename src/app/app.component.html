@@ -9,40 +9,11 @@
 <div class="container">
   <div *ngIf="!loading && accessToken">
     <h1>Checkout these albums from artists you like</h1>
-    <mat-card class="artist-card" *ngFor="let artist of artists">
-      <mat-card-header>
-        <mat-card-title>{{ artist.name }}</mat-card-title>
-      </mat-card-header>
-      <img mat-card-image [src]="artist.images[0].url" alt="name photo" />
-      <mat-card-content>
-        <mat-nav-list>
-          <div *ngFor="let album of artist.albums">
-            <mat-list-item *ngIf="album.artist_id === artist.id">
-              <img
-                class="avatar"
-                matListAvatar
-                [src]="album.images[2].url"
-                alt="artwork"
-              />
-              <a matLine [href]="album.external_url" target="_blank">{{
-                album.name
-              }}</a>
-              <span matLine>{{ album.release_date }}</span>
-            </mat-list-item>
-          </div>
-        </mat-nav-list>
-      </mat-card-content>
-      <mat-card-actions>
-        <a
-          mat-button
-          color="primary"
-          [href]="artist.external_url"
-          target="_blank"
-        >
-          <span>View on Spotify</span>
-        </a>
-      </mat-card-actions>
-    </mat-card>
+    <app-artist-card
+      class="artist-card"
+      *ngFor="let artist of artists"
+      [artist]="artist"
+    ></app-artist-card>
   </div>
   <div class="login">
     <button
