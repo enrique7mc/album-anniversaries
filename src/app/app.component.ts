@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { client_id, redirect_uri, scope, stateKey } from './constants';
 import { SpotifyService } from './spotify.service';
@@ -25,7 +24,6 @@ export class AppComponent implements OnInit, OnDestroy {
   response: any;
 
   constructor(
-    private http: HttpClient,
     private spotifyService: SpotifyService,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {

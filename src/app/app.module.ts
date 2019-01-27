@@ -7,9 +7,10 @@ import { MatButtonModule } from '@angular/material';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
+import { ArtistCardComponent } from './artist-card/artist-card.component';
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent, ArtistCardComponent],
   imports: [
     BrowserModule,
     HttpClientModule,
