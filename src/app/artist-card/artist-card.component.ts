@@ -16,7 +16,7 @@ export class ArtistCardComponent {
     return `${this.artist.name} photo`;
   }
 
-  get artistUrl(): string {
+  get artistImageUrl(): string {
     const largestImage = this.artist.images[0];
     return largestImage != null
       ? largestImage.url

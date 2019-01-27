@@ -8,9 +8,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material/material.module';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
+import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
 
 @NgModule({
-  declarations: [AppComponent, ArtistCardComponent],
+  declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
   imports: [
     BrowserModule,
     HttpClientModule,

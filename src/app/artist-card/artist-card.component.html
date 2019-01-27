@@ -2,23 +2,13 @@
   <mat-card-header>
     <mat-card-title>{{ artist.name }}</mat-card-title>
   </mat-card-header>
-  <img mat-card-image [src]="artistUrl" [alt]="altTag" />
+  <img mat-card-image [src]="artistImageUrl" [alt]="altTag" />
   <mat-card-content>
     <mat-nav-list>
-      <div *ngFor="let album of artist.albums">
-        <mat-list-item>
-          <img
-            class="avatar"
-            matListAvatar
-            [src]="album.images[2].url"
-            alt="artwork"
-          />
-          <a matLine [href]="album.external_url" target="_blank">
-            {{ album.name }}
-          </a>
-          <span matLine>{{ album.release_date }}</span>
-        </mat-list-item>
-      </div>
+      <app-album-list-item
+        *ngFor="let album of artist.albums"
+        [album]="album"
+      ></app-album-list-item>
     </mat-nav-list>
   </mat-card-content>
   <mat-card-actions>

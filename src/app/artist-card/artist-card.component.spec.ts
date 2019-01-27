@@ -3,6 +3,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ArtistCardComponent } from './artist-card.component';
 import { MaterialModule } from '../material/material.module';
 import { Artist } from '../artist';
+import { AlbumListItemComponent } from '../album-list-item/album-list-item.component';
 
 describe('ArtistCardComponent', () => {
   let component: ArtistCardComponent;
@@ -21,7 +22,7 @@ describe('ArtistCardComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       imports: [MaterialModule],
-      declarations: [ArtistCardComponent]
+      declarations: [ArtistCardComponent, AlbumListItemComponent]
     }).compileComponents();
   }));
 

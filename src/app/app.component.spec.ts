@@ -4,6 +4,7 @@ import { MaterialModule } from './material/material.module';
 import { SpotifyService } from './spotify.service';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
+import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -17,7 +18,7 @@ describe('AppComponent', () => {
         { provide: SpotifyService, useValue: spy },
         { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG }
       ],
-      declarations: [AppComponent, ArtistCardComponent]
+      declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent]
     }).compileComponents();
   }));
 
