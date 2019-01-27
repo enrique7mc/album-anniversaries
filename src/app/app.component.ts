@@ -8,6 +8,7 @@ import { Album } from './album';
 import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,9 @@ export class AppComponent implements OnInit, OnDestroy {
   title: string;
   params = null;
   accessToken: string;
-  artists: Artist[];
+  showAlbumBirthdayList: boolean = false;
+  artists$: Observable<Artist[]>;
+  artistsWithRecentAlbums$: Observable<Artist[]>;
   artistsSubscription: Subscription;
   loading: boolean = false;
   response: any;
@@ -46,12 +49,34 @@ export class AppComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.spotifyService.loadArtistsWithAlbums(this.accessToken);
 
-      this.artistsSubscription = this.spotifyService.artists.subscribe(
-        artists => {
-          this.artists = artists;
-          this.loading = false;
-        }
+      // TODO(me): figure out a better way to do the subscription logic.
+      this.artistsWithRecentAlbums$ = this.spotifyService.artists.pipe(
+        map(artists => artists.map(a => Object.assign({}, a))),
+        map(artists =>
+          artists.filter(artist => {
+            artist.albums = artist.albums.filter(a =>
+              SpotifyService.albumReleasedPastYear(a)
+            );
+            return artist.albums.length > 0;
+          })
+        )
       );
+
+      this.artists$ = this.spotifyService.artists.pipe(
+        map(artists => artists.map(a => Object.assign({}, a))),
+        map(artists =>
+          artists.filter(artist => {
+            artist.albums = artist.albums.filter(a =>
+              SpotifyService.albumHadBirthdayPastWeek(a)
+            );
+            return artist.albums.length > 0;
+          })
+        )
+      );
+
+      this.artistsSubscription = this.spotifyService.artists.subscribe(() => {
+        this.loading = false;
+      });
     }
   }
 

@@ -26,7 +26,7 @@ export class SpotifyService {
     this._artists = <BehaviorSubject<Artist[]>>new BehaviorSubject([]);
   }
 
-  get artists() {
+  get artists(): Observable<Artist[]> {
     return this._artists.asObservable();
   }
 
@@ -86,8 +86,8 @@ export class SpotifyService {
           .filter(item => item.release_date_precision === 'day')
           .filter(
             item =>
-              this.albumHadBirthdayPastWeek(item) ||
-              this.albumReleasedPastYear(item)
+              SpotifyService.albumHadBirthdayPastWeek(item) ||
+              SpotifyService.albumReleasedPastYear(item)
           )
           .map(item => ({
             id: item.id,
@@ -117,7 +117,7 @@ export class SpotifyService {
   }
 
   // TODO(me): refactor this to make more generic
-  albumHadBirthdayPastWeek(album: Album): boolean {
+  static albumHadBirthdayPastWeek(album: Album): boolean {
     const today = new Date(Date.now());
     const albumDate = new Date(
       Date.parse(`${album.release_date} 00:00:00 -0800`)
@@ -129,7 +129,7 @@ export class SpotifyService {
     return dateDiffMillis > 0 && dateDiffMillis < millisecondsInAWeek;
   }
 
-  albumReleasedPastYear(album: Album): boolean {
+  static albumReleasedPastYear(album: Album): boolean {
     const albumDate = new Date(
       Date.parse(`${album.release_date} 00:00:00 -0800`)
     );
