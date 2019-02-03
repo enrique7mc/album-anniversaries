@@ -2,11 +2,11 @@ import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { mergeMap } from 'rxjs/operators';
-import { map } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, from } from 'rxjs';
 import { Album } from './album';
 import { AppConfig, APP_CONFIG } from './app-config';
 
@@ -47,6 +47,8 @@ export class SpotifyService {
       })
     };
 
+    // TODO(me): try to compose the artist and albums observables instead of
+    // handling a nested subscription.
     this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
       let artistsResponse = data.items;
 
@@ -66,48 +68,41 @@ export class SpotifyService {
         };
       });
 
-      const artistAlbumRequests: Observable<any>[] = artists.map(artist =>
-        this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
-          map((data: any) => {
-            const albums: Album[] = data.items.map(item =>
-              Object.assign({}, item, { artist_id: artist.id })
-            );
-            return albums;
-          })
-        )
+      const artistAlbumRequests: Observable<any> = from(artists).pipe(
+        mergeMap(artist =>
+          this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
+            map((data: any) => {
+              // TODO(me): extract this into its own function
+              const albums: Album[] = data.items
+                .map(item => Object.assign({}, item, { artist_id: artist.id }))
+                .filter(item => item.release_date_precision === 'day')
+                .filter(
+                  item =>
+                    SpotifyService.albumHadBirthdayPastWeek(item) ||
+                    SpotifyService.albumReleasedPastYear(item)
+                )
+                .map(item => ({
+                  id: item.id,
+                  artist_id: item.artist_id,
+                  name: item.name,
+                  release_date: item.release_date,
+                  release_date_precision: item.release_date_precision,
+                  images: item.images,
+                  external_url: item.external_urls.spotify
+                }));
+              return albums;
+            })
+          )
+        ),
+        filter(albums => albums.length > 0)
       );
 
-      forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
-        const flattenedAlbums = this.flatten(data);
-        const albums: Album[] = flattenedAlbums
-          .filter(item => item.release_date_precision === 'day')
-          .filter(
-            item =>
-              SpotifyService.albumHadBirthdayPastWeek(item) ||
-              SpotifyService.albumReleasedPastYear(item)
-          )
-          .map(item => ({
-            id: item.id,
-            artist_id: item.artist_id,
-            name: item.name,
-            release_date: item.release_date,
-            release_date_precision: item.release_date_precision,
-            images: item.images,
-            external_url: item.external_urls.spotify
-          }));
+      artistAlbumRequests.subscribe(albums => {
+        const matchingArtist = artists.find(a => a.id === albums[0].artist_id);
+        matchingArtist.albums.push(...albums);
 
-        albums.forEach(album => {
-          const matchingArtist = artists.find(a => a.id === album.artist_id);
-          if (!matchingArtist) {
-            console.log(`No matching artist for album ${album.id}`);
-          }
-
-          matchingArtist.albums.push(album);
-        });
-
-        this.dataStore.artists = artists.filter(
-          artist => artist.albums.length > 0
-        );
+        this.dataStore.artists = [...this.dataStore.artists, matchingArtist];
+        console.log(Date.now());
         this._artists.next(Object.assign({}, this.dataStore).artists);
       });
     });
