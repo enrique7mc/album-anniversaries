@@ -36,6 +36,10 @@ export class SpotifyService {
       : 'https://api.spotify.com/v1/me/top/artists?limit=50';
   }
 
+  artistUrl(id: string): string {
+    return `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`;
+  }
+
   loadArtistsWithAlbums(accessToken: string): void {
     const httpOptions = {
       headers: new HttpHeaders({
@@ -62,23 +66,16 @@ export class SpotifyService {
         };
       });
 
-      const artistAlbumRequests: Observable<any>[] = artists
-        .map(a => a.id)
-        .map(id =>
-          this.http
-            .get(
-              `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`,
-              httpOptions
-            )
-            .pipe(
-              map((data: any) => {
-                const albums: Album[] = data.items.map(item =>
-                  Object.assign({}, item, { artist_id: id })
-                );
-                return albums;
-              })
-            )
-        );
+      const artistAlbumRequests: Observable<any>[] = artists.map(artist =>
+        this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
+          map((data: any) => {
+            const albums: Album[] = data.items.map(item =>
+              Object.assign({}, item, { artist_id: artist.id })
+            );
+            return albums;
+          })
+        )
+      );
 
       forkJoin(artistAlbumRequests).subscribe((data: any[]) => {
         const flattenedAlbums = this.flatten(data);
