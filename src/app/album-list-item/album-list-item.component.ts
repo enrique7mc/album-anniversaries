@@ -1,4 +1,9 @@
-import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  Input,
+  ViewEncapsulation
+} from '@angular/core';
 import { Album } from '../album';
 
 @Component({

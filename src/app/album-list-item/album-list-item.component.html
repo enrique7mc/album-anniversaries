@@ -1,5 +1,5 @@
-<mat-list-item>
+<a mat-list-item [href]="album.external_url" target="_blank">
   <img class="avatar" matListAvatar [src]="albumCoverUrl" alt="altTag" />
-  <a matLine [href]="album.external_url" target="_blank"> {{ album.name }} </a>
+  <span matLine> {{ album.name }} </span>
   <span matLine>{{ album.release_date }}</span>
-</mat-list-item>
+</a>

@@ -54,8 +54,8 @@ export class AppComponent implements OnInit, OnDestroy {
         map(artists => artists.map(a => Object.assign({}, a))),
         map(artists =>
           artists.filter(artist => {
-            artist.albums = artist.albums.filter(a =>
-              SpotifyService.albumReleasedPastYear(a)
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumReleasedPastYear
             );
             return artist.albums.length > 0;
           })
@@ -66,8 +66,8 @@ export class AppComponent implements OnInit, OnDestroy {
         map(artists => artists.map(a => Object.assign({}, a))),
         map(artists =>
           artists.filter(artist => {
-            artist.albums = artist.albums.filter(a =>
-              SpotifyService.albumHadBirthdayPastWeek(a)
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumHadBirthdayPastWeek
             );
             return artist.albums.length > 0;
           })
