@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs/Observable';
 import { mergeMap } from 'rxjs/operators';
-import { map, filter } from 'rxjs/operators';
+import { map, filter, tap, bufferCount } from 'rxjs/operators';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
@@ -94,15 +94,20 @@ export class SpotifyService {
             })
           )
         ),
-        filter(albums => albums.length > 0)
+        filter(albums => albums.length > 0),
+        map(albums => {
+          const matchingArtist = artists.find(
+            a => a.id === albums[0].artist_id
+          );
+          matchingArtist.albums.push(...albums);
+
+          return matchingArtist;
+        })
       );
 
-      artistAlbumRequests.subscribe(albums => {
-        const matchingArtist = artists.find(a => a.id === albums[0].artist_id);
-        matchingArtist.albums.push(...albums);
-
-        this.dataStore.artists = [...this.dataStore.artists, matchingArtist];
-        console.log(Date.now());
+      artistAlbumRequests.pipe(bufferCount(5)).subscribe(artistList => {
+        console.log(artistList.length);
+        this.dataStore.artists = [...this.dataStore.artists, ...artistList];
         this._artists.next(Object.assign({}, this.dataStore).artists);
       });
     });
