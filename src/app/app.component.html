@@ -6,14 +6,16 @@
   color="primary"
   mode="indeterminate"
 ></mat-progress-bar>
-<div class="container">
-  <div *ngIf="!loading && accessToken" class="artist-list">
-    <h1>These albums were released this week in the past!</h1>
+<div class="container" *ngIf="!loading && accessToken">
+  <h1>These albums were released this week in the past!</h1>
+  <div class="artist-list">
     <app-artist-card
       *ngFor="let artist of (artists$ | async)"
       [artist]="artist"
     ></app-artist-card>
-    <h1>Albums released last year</h1>
+  </div>
+  <h1>Albums released last year</h1>
+  <div class="artist-list">
     <app-artist-card
       *ngFor="let artist of (artistsWithRecentAlbums$ | async)"
       [artist]="artist"

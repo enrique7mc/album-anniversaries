@@ -7,6 +7,10 @@
   .artist-list {
     max-width: 460px;
   }
+
+  .artist-list > *:not(:last-child) {
+    margin-bottom: 8px;
+  }
 }
 
 @media only screen and (min-device-width: 800px) {
@@ -19,15 +23,24 @@
     max-width: 600px;
   }
 
-  .login {
-    width: 50%;
-    margin: 100px auto;
+  .artist-list > *:not(:last-child) {
+    margin-bottom: 16px;
   }
 }
 
 body {
   background-color: #fafafa;
   padding-top: 64px;
+}
+
+.artist-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.login {
+  width: 50%;
+  margin: 100px auto;
 }
 
 .sticky-nav {
