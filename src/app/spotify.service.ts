@@ -6,7 +6,7 @@ import { map, filter, tap, bufferCount } from 'rxjs/operators';
 import { forkJoin } from 'rxjs/observable/forkJoin';
 import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
-import { BehaviorSubject, from } from 'rxjs';
+import { BehaviorSubject, Subject, from } from 'rxjs';
 import { Album } from './album';
 import { AppConfig, APP_CONFIG } from './app-config';
 
@@ -40,12 +40,15 @@ export class SpotifyService {
     return `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`;
   }
 
-  loadArtistsWithAlbums(accessToken: string): void {
+  // TODO(me): figure out the optimal way to signal this method is done loading.
+  loadArtistsWithAlbums(accessToken: string): Observable<boolean> {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: `Bearer ${accessToken}`
       })
     };
+
+    const done$ = new Subject<boolean>();
 
     // TODO(me): try to compose the artist and albums observables instead of
     // handling a nested subscription.
@@ -105,11 +108,22 @@ export class SpotifyService {
         })
       );
 
-      artistAlbumRequests.pipe(bufferCount(5)).subscribe(artistList => {
-        this.dataStore.artists = [...this.dataStore.artists, ...artistList];
-        this._artists.next(Object.assign({}, this.dataStore).artists);
-      });
+      artistAlbumRequests.pipe(bufferCount(5)).subscribe(
+        artistList => {
+          this.dataStore.artists = [...this.dataStore.artists, ...artistList];
+          this._artists.next(Object.assign({}, this.dataStore).artists);
+        },
+        err => {
+          // do nothin
+        },
+        () => {
+          // <----
+          done$.next(true);
+        }
+      );
     });
+
+    return done$.asObservable();
   }
 
   // TODO(me): refactor this to make more generic

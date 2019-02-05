@@ -7,8 +7,8 @@ import { Artist } from './artist';
 import { Album } from './album';
 import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
-import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Subscription, Subject } from 'rxjs';
+import { map, takeUntil, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +25,8 @@ export class AppComponent implements OnInit, OnDestroy {
   artistsWithRecentAlbums$: Observable<Artist[]>;
   artistsSubscription: Subscription;
   loading: boolean = false;
-  response: any;
+
+  _destroyed$ = new Subject();
 
   constructor(
     private spotifyService: SpotifyService,
@@ -47,41 +48,51 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (this.accessToken) {
       this.loading = true;
-      this.spotifyService.loadArtistsWithAlbums(this.accessToken);
+      const doneLoading$ = this.spotifyService.loadArtistsWithAlbums(
+        this.accessToken
+      );
 
       // TODO(me): figure out a better way to do the subscription logic.
       this.artistsWithRecentAlbums$ = this.spotifyService.artists.pipe(
         map(artists => artists.map(a => Object.assign({}, a))),
-        map(artists =>
-          artists.filter(artist => {
-            artist.albums = artist.albums.filter(
-              SpotifyService.albumReleasedPastYear
-            );
-            return artist.albums.length > 0;
-          })
+        map(
+          artists =>
+            artists.filter(artist => {
+              artist.albums = artist.albums.filter(
+                SpotifyService.albumReleasedPastYear
+              );
+              return artist.albums.length > 0;
+            }),
+          takeUntil(this._destroyed$)
         )
       );
 
       this.artists$ = this.spotifyService.artists.pipe(
         map(artists => artists.map(a => Object.assign({}, a))),
-        map(artists =>
-          artists.filter(artist => {
-            artist.albums = artist.albums.filter(
-              SpotifyService.albumHadBirthdayPastWeek
-            );
-            return artist.albums.length > 0;
-          })
+        map(
+          artists =>
+            artists.filter(artist => {
+              artist.albums = artist.albums.filter(
+                SpotifyService.albumHadBirthdayPastWeek
+              );
+              return artist.albums.length > 0;
+            }),
+          takeUntil(this._destroyed$)
         )
       );
 
-      this.artistsSubscription = this.spotifyService.artists.subscribe(() => {
-        this.loading = false;
-      });
+      doneLoading$
+        .pipe(
+          takeUntil(this._destroyed$),
+          take(1)
+        )
+        .subscribe(() => (this.loading = false));
     }
   }
 
   ngOnDestroy() {
-    this.artistsSubscription.unsubscribe();
+    this._destroyed$.next();
+    this._destroyed$.complete();
   }
 
   get authError(): boolean {
