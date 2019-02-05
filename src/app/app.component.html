@@ -21,14 +21,15 @@
       [artist]="artist"
     ></app-artist-card>
   </div>
-  <div class="login">
-    <button
-      mat-raised-button
-      color="primary"
-      *ngIf="!accessToken"
-      (click)="login()"
-    >
-      Login
-    </button>
-  </div>
+</div>
+<!-- TODO(me): fix styles for login button. -->
+<div class="login">
+  <button
+    mat-raised-button
+    color="primary"
+    *ngIf="!accessToken"
+    (click)="login()"
+  >
+    Login
+  </button>
 </div>
