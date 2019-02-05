@@ -106,7 +106,6 @@ export class SpotifyService {
       );
 
       artistAlbumRequests.pipe(bufferCount(5)).subscribe(artistList => {
-        console.log(artistList.length);
         this.dataStore.artists = [...this.dataStore.artists, ...artistList];
         this._artists.next(Object.assign({}, this.dataStore).artists);
       });

@@ -27,4 +27,13 @@
 
 body {
   background-color: #fafafa;
+  padding-top: 64px;
+}
+
+.sticky-nav {
+  position: fixed;
+  right: 0;
+  left: 0;
+  top: 0;
+  z-index: 999;
 }
