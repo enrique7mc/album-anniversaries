@@ -1,12 +1,23 @@
 {
   "hosting": {
     "public": "dist/spotify-demo",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/assets/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/assets/**"
+    ],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
+    ]
+  },
+  "functions": {
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run lint",
+      "npm --prefix \"$RESOURCE_DIR\" run build"
     ]
   }
 }

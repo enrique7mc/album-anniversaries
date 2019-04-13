@@ -9,6 +9,7 @@ import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
 import { Subscription, Subject } from 'rxjs';
 import { map, takeUntil, take } from 'rxjs/operators';
+import { AngularFireFunctions } from '@angular/fire/functions';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +31,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private spotifyService: SpotifyService,
+    private fn: AngularFireFunctions,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {
     this.title = config.title;
@@ -38,6 +40,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.params = this.getHashParams();
     this.accessToken = this.params['access_token'];
+    console.log(this.getCode());
 
     if (this.authError) {
       console.error('There was an error during the authentication');
@@ -102,9 +105,14 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.accessToken && (state == null || state !== storedState);
   }
 
+  getCode(): string {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('code');
+  }
+
   getHashParams(): any {
     let hashParams = {};
-    var e,
+    let e,
       r = /([^&;=]+)=?([^&;]*)/g,
       q = window.location.hash.substring(1);
     while ((e = r.exec(q))) {
@@ -128,6 +136,18 @@ export class AppComponent implements OnInit, OnDestroy {
     localStorage.setItem(stateKey, state);
     var url = 'https://accounts.spotify.com/authorize';
     url += '?response_type=token';
+    url += `&client_id=${encodeURIComponent(client_id)}`;
+    url += `&scope=${encodeURIComponent(scope)}`;
+    url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
+    url += `&state=${encodeURIComponent(state)}`;
+    window.location.href = url;
+  }
+
+  authorize() {
+    let state = this.generateRandomString(16);
+    localStorage.setItem(stateKey, state);
+    var url = 'https://accounts.spotify.com/authorize';
+    url += '?response_type=code';
     url += `&client_id=${encodeURIComponent(client_id)}`;
     url += `&scope=${encodeURIComponent(scope)}`;
     url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
