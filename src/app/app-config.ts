@@ -1,4 +1,5 @@
 import { InjectionToken } from '@angular/core';
+import { environment } from '../environments/environment';
 
 export interface AppConfig {
   title: string;
@@ -7,9 +8,9 @@ export interface AppConfig {
 }
 
 export const SPOTIFY_APP_CONFIG: AppConfig = {
-  title: 'Album anniversaries!',
-  redirectUrl: 'https://album-anniversaries.firebaseapp.com/',
-  isDev: false
+  title: environment.spotify.title,
+  redirectUrl: environment.spotify.redirectUrl,
+  isDev: true
 };
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('spotify-app.config');

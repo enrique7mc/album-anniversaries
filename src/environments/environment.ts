@@ -3,7 +3,19 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  spotify: {
+    title: 'Album anniversaries dev',
+    redirectUrl: 'http://localhost:4200'
+  },
+  firebase: {
+    apiKey: 'AIzaSyDNwMtOBcQFPxpdHwsXyC98IfcYP8qiZ70',
+    authDomain: 'album-anniversaries.firebaseapp.com',
+    databaseURL: 'https://album-anniversaries.firebaseio.com',
+    projectId: 'album-anniversaries',
+    storageBucket: 'album-anniversaries.appspot.com',
+    messagingSenderId: '869867999570'
+  }
 };
 
 /*
