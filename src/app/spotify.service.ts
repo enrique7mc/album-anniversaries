@@ -40,7 +40,7 @@ export class SpotifyService {
     return `https://api.spotify.com/v1/artists/${id}/albums?include_groups=album&limit=50`;
   }
 
-  // TODO(me): figure out the optimal way to signal this method is done loading.
+  // TODO: figure out the optimal way to signal this method is done loading.
   loadArtistsWithAlbums(accessToken: string): Observable<boolean> {
     const httpOptions = {
       headers: new HttpHeaders({
@@ -50,7 +50,7 @@ export class SpotifyService {
 
     const done$ = new Subject<boolean>();
 
-    // TODO(me): try to compose the artist and albums observables instead of
+    // TODO: try to compose the artist and albums observables instead of
     // handling a nested subscription.
     this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
       let artistsResponse = data.items;
@@ -75,7 +75,7 @@ export class SpotifyService {
         mergeMap(artist =>
           this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
             map((data: any) => {
-              // TODO(me): extract this into its own function
+              // TODO: extract this into its own function
               const albums: Album[] = data.items
                 .map(item => Object.assign({}, item, { artist_id: artist.id }))
                 .filter(item => item.release_date_precision === 'day')
@@ -114,7 +114,7 @@ export class SpotifyService {
           this._artists.next(Object.assign({}, this.dataStore).artists);
         },
         err => {
-          // do nothin
+          // do nothing
         },
         () => {
           // <----
@@ -126,7 +126,7 @@ export class SpotifyService {
     return done$.asObservable();
   }
 
-  // TODO(me): refactor this to make more generic
+  // TODO: refactor this to make more generic
   static albumHadBirthdayPastWeek(album: Album): boolean {
     const today = new Date(Date.now());
     const albumDate = new Date(
@@ -149,7 +149,7 @@ export class SpotifyService {
     return Math.abs(now - albumDate.getTime()) < millisecondsInAYear;
   }
 
-  // TODO(me): replace with array.flat()
+  // TODO: replace with array.flat()
   flatten(input) {
     const stack = [...input];
     const res = [];
