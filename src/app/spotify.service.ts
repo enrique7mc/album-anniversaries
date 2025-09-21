@@ -1,12 +1,9 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs/Observable';
-import { mergeMap } from 'rxjs/operators';
-import { map, filter, tap, bufferCount } from 'rxjs/operators';
-import { forkJoin } from 'rxjs/observable/forkJoin';
+import { Observable, BehaviorSubject, Subject, from, forkJoin } from 'rxjs';
+import { mergeMap, map, filter, tap, bufferCount } from 'rxjs/operators';
 import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
-import { BehaviorSubject, Subject, from } from 'rxjs';
 import { Album } from './album';
 import { AppConfig, APP_CONFIG } from './app-config';
 
@@ -23,7 +20,7 @@ export class SpotifyService {
   constructor(private http: HttpClient, @Inject(APP_CONFIG) config: AppConfig) {
     this.isDev = config.isDev;
     this.dataStore = { artists: [] };
-    this._artists = <BehaviorSubject<Artist[]>>new BehaviorSubject([]);
+    this._artists = new BehaviorSubject<Artist[]>([]);
   }
 
   get artists(): Observable<Artist[]> {
