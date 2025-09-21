@@ -1,0 +1,14 @@
+.mat-card-image {
+  object-fit: cover;
+  height: 400px;
+}
+
+.mat-nav-list {
+  height: 250px;
+  overflow-y: scroll;
+}
+
+mat-card-header {
+  justify-content: center;
+  padding: 16px;
+}
