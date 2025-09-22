@@ -22,14 +22,26 @@
     ></app-artist-card>
   </div>
 </div>
-<!-- TODO(me): fix styles for login button. -->
-<div class="login">
-  <button
-    mat-raised-button
-    color="primary"
-    *ngIf="!accessToken"
-    (click)="login()"
-  >
-    Login
-  </button>
+<div class="login-container" *ngIf="!accessToken">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>music_note</mat-icon>
+      <mat-card-title>Connect to Spotify</mat-card-title>
+      <mat-card-subtitle>Discover album anniversaries from your favorite artists</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Sign in to see which albums from your favorite artists were released this week in previous years.</p>
+    </mat-card-content>
+    <mat-card-actions align="center">
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="login()"
+        class="login-button"
+      >
+        <mat-icon>login</mat-icon>
+        Connect with Spotify
+      </button>
+    </mat-card-actions>
+  </mat-card>
 </div>
