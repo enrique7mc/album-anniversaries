@@ -34,6 +34,15 @@ yarn-error.log
 testem.log
 /typings
 
+# Firebase specific files and directories
+firebase-debug.log
+.firebase/
+.firebaserc
+firebase.json # Unless you want to track your Firebase configuration
+web/firebase-config.js # Or any other file containing Firebase configuration secrets
+functions/node_modules/ # If you're using Cloud Functions with Node.js
+functions/lib/ # Compiled JavaScript from TypeScript functions
+
 # System files
 .DS_Store
 Thumbs.db
