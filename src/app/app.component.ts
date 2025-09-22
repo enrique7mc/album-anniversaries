@@ -1,15 +1,15 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewEncapsulation, inject } from '@angular/core';
 
 import { client_id, redirect_uri, scope, stateKey } from './constants';
 import { SpotifyService } from './spotify.service';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { Artist } from './artist';
 import { Album } from './album';
 import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
 import { Subscription, Subject } from 'rxjs';
 import { map, takeUntil, take } from 'rxjs/operators';
-import { AngularFireFunctions } from '@angular/fire/functions';
+import { Functions } from '@angular/fire/functions';
 
 @Component({
   selector: 'app-root',
@@ -27,11 +27,11 @@ export class AppComponent implements OnInit, OnDestroy {
   artistsSubscription: Subscription;
   loading: boolean = false;
 
-  _destroyed$ = new Subject();
+  _destroyed$ = new Subject<void>();
+  private fn: Functions = inject(Functions);
 
   constructor(
     private spotifyService: SpotifyService,
-    private fn: AngularFireFunctions,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {
     this.title = config.title;
@@ -56,7 +56,7 @@ export class AppComponent implements OnInit, OnDestroy {
       );
 
       // TODO(me): figure out a better way to do the subscription logic.
-      this.artistsWithRecentAlbums$ = this.spotifyService.artists.pipe(
+      this.artistsWithRecentAlbums$ = (this.spotifyService.artists as Observable<Artist[]>).pipe(
         map(artists => artists.map(a => Object.assign({}, a))),
         map(
           artists =>
@@ -70,7 +70,7 @@ export class AppComponent implements OnInit, OnDestroy {
         )
       );
 
-      this.artists$ = this.spotifyService.artists.pipe(
+      this.artists$ = (this.spotifyService.artists as Observable<Artist[]>).pipe(
         map(artists => artists.map(a => Object.assign({}, a))),
         map(
           artists =>
