@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ArtistCardComponent } from './artist-card.component';
 import { MaterialModule } from '../material/material.module';
@@ -19,7 +19,7 @@ describe('ArtistCardComponent', () => {
     albums: []
   };
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [MaterialModule],
       declarations: [ArtistCardComponent, AlbumListItemComponent]

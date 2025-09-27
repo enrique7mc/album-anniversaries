@@ -6,7 +6,8 @@ export const environment = {
   production: false,
   spotify: {
     title: 'Album anniversaries dev',
-    redirectUrl: 'https://4200-firebase-album-anniversaries-1758421714592.cluster-qewex6ficndhsr4lj7gyhcsnbe.cloudworkstations.dev/'
+    // redirectUrl: 'https://4200-firebase-album-anniversaries-1758421714592.cluster-qewex6ficndhsr4lj7gyhcsnbe.cloudworkstations.dev/'
+    redirectUrl: 'http://localhost:4200',
   },
   firebase: {
     apiKey: 'AIzaSyDNwMtOBcQFPxpdHwsXyC98IfcYP8qiZ70',
@@ -14,8 +15,8 @@ export const environment = {
     databaseURL: 'https://album-anniversaries.firebaseio.com',
     projectId: 'album-anniversaries',
     storageBucket: 'album-anniversaries.appspot.com',
-    messagingSenderId: '869867999570'
-  }
+    messagingSenderId: '869867999570',
+  },
 };
 
 /*
