@@ -17,7 +17,10 @@ export class AlbumListItemComponent {
   album: Album;
 
   get altTag(): string {
-    return `${this.album.name} photo`;
+    if (!this.album.name || this.album.name.trim() === '') {
+      return 'Album cover';
+    }
+    return `Album cover for ${this.album.name}`;
   }
 
   get albumCoverUrl(): string {

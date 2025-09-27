@@ -60,7 +60,7 @@ describe('AlbumListItemComponent', () => {
   describe('Getter Methods', () => {
     describe('altTag', () => {
       it('should return correct alt tag for album', () => {
-        expect(component.altTag).toBe('Test Album photo');
+        expect(component.altTag).toBe('Album cover for Test Album');
       });
 
       it('should handle album names with special characters', () => {
@@ -68,12 +68,24 @@ describe('AlbumListItemComponent', () => {
           ...mockAlbum,
           name: "Artist's Greatest Hits & More",
         };
-        expect(component.altTag).toBe("Artist's Greatest Hits & More photo");
+        expect(component.altTag).toBe(
+          "Album cover for Artist's Greatest Hits & More"
+        );
       });
 
       it('should handle empty album name', () => {
         component.album = { ...mockAlbum, name: '' };
-        expect(component.altTag).toBe(' photo');
+        expect(component.altTag).toBe('Album cover');
+      });
+
+      it('should handle null album name', () => {
+        component.album = { ...mockAlbum, name: null as any };
+        expect(component.altTag).toBe('Album cover');
+      });
+
+      it('should handle whitespace-only album name', () => {
+        component.album = { ...mockAlbum, name: '   ' };
+        expect(component.altTag).toBe('Album cover');
       });
     });
 
@@ -164,7 +176,8 @@ describe('AlbumListItemComponent', () => {
       newComponent.album = newAlbum;
       newFixture.detectChanges();
 
-      const linkElement = newFixture.nativeElement.querySelector('a[mat-list-item]');
+      const linkElement =
+        newFixture.nativeElement.querySelector('a[mat-list-item]');
       expect(linkElement.getAttribute('href')).toBe('');
     });
 
@@ -175,7 +188,8 @@ describe('AlbumListItemComponent', () => {
       newComponent.album = newAlbum;
       newFixture.detectChanges();
 
-      const subtitleElement = newFixture.nativeElement.querySelector('[matListItemLine]');
+      const subtitleElement =
+        newFixture.nativeElement.querySelector('[matListItemLine]');
       expect(subtitleElement.textContent.trim()).toBe('');
     });
 
@@ -186,7 +200,8 @@ describe('AlbumListItemComponent', () => {
       newComponent.album = newAlbum;
       newFixture.detectChanges();
 
-      const titleElement = newFixture.nativeElement.querySelector('[matListItemTitle]');
+      const titleElement =
+        newFixture.nativeElement.querySelector('[matListItemTitle]');
       expect(titleElement.textContent.trim()).toBe('');
     });
 
@@ -205,7 +220,7 @@ describe('AlbumListItemComponent', () => {
       fixture.detectChanges();
 
       expect(component.albumCoverUrl).toBe('https://via.placeholder.com/40');
-      expect(component.altTag).toBe(' photo');
+      expect(component.altTag).toBe('Album cover');
     });
   });
 
