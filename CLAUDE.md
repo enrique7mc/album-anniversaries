@@ -78,6 +78,33 @@ The app uses Spotify's OAuth 2.0 implicit grant flow:
 - Test files follow `*.spec.ts` naming convention
 - Coverage reports generated during test runs
 
+#### OnPush Change Detection Testing Pattern
+Components use `ChangeDetectionStrategy.OnPush` which requires special testing considerations:
+
+**Problem**: When testing input changes, modifying `@Input()` properties after component initialization doesn't trigger change detection properly.
+
+**Solution**: Create fresh fixture instances for each test case that needs different input values.
+
+```typescript
+// ❌ Problematic pattern - change detection may not work
+it('should handle null name', () => {
+  component.album = { ...mockAlbum, name: null };
+  fixture.detectChanges(); // May not trigger with OnPush
+  // Test may fail unexpectedly
+});
+
+// ✅ Correct pattern - fresh fixture with OnPush
+it('should handle null name', () => {
+  const newFixture = TestBed.createComponent(AlbumListItemComponent);
+  const newComponent = newFixture.componentInstance;
+  newComponent.album = { ...mockAlbum, name: null };
+  newFixture.detectChanges(); // Reliable with fresh instance
+  // Test works consistently
+});
+```
+
+**When to use**: Any test that modifies input properties and needs to verify the DOM reflects those changes.
+
 ### Build Configuration
 - TypeScript compilation with Angular CLI
 - SCSS preprocessing
