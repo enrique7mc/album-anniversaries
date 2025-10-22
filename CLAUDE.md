@@ -13,8 +13,8 @@ The project uses Angular Material for UI components and Firebase for hosting and
 ## Development Commands
 
 ### Core Development
-- `npm start` - Start development server on http://localhost:4200
-- `npm run build` - Build the project for production
+- `npm start` - Start development server on http://127.0.0.1:4200 (use 127.0.0.1 instead of localhost for Spotify OAuth compatibility)
+- `npm run build` - Build the project for production (uses production configuration with environment.prod.ts)
 - `npm test` - Run unit tests via Karma
 - `npm run lint` - Run TSLint for code quality checks
 
@@ -37,10 +37,13 @@ The project uses Angular Material for UI components and Firebase for hosting and
 
 ### Services
 - **SpotifyService** (`src/app/spotify.service.ts`) - Handles all Spotify API interactions, includes:
-  - OAuth token management
   - Artist and album data fetching
   - Date filtering logic for anniversaries and recent releases
   - Development mode support with limited data
+- **PkceService** (`src/app/pkce.service.ts`) - Handles PKCE (Proof Key for Code Exchange) OAuth flow, includes:
+  - Code verifier generation (cryptographically random string)
+  - Code challenge generation (SHA-256 hash of code verifier)
+  - SessionStorage management for OAuth state
 
 ### Data Models
 - **Artist** (`src/app/artist.ts`) - Artist data structure
@@ -51,11 +54,29 @@ The project uses Angular Material for UI components and Firebase for hosting and
 - **App config** (`src/app/app-config.ts`) - Application-specific configuration injection
 
 ### Authentication Flow
-The app uses Spotify's OAuth 2.0 implicit grant flow:
+The app uses Spotify's OAuth 2.0 Authorization Code flow with PKCE (Proof Key for Code Exchange):
 1. User clicks login button
-2. Redirected to Spotify authorization
-3. Spotify redirects back with access token in URL hash
-4. Token extracted and used for API calls
+2. App generates a random `code_verifier` and creates a SHA-256 `code_challenge`
+3. Code verifier is stored in sessionStorage
+4. User is redirected to Spotify authorization with code challenge
+5. Spotify redirects back with authorization code in URL query parameters
+6. App exchanges authorization code + code verifier for access token via POST to Spotify's token endpoint
+7. Access token is used for Spotify API calls
+8. Code verifier is cleared from sessionStorage
+
+**Note**: PKCE is more secure than the deprecated Implicit Grant flow as it doesn't expose tokens in the URL and works safely for client-side applications without requiring a backend server to store secrets.
+
+#### Spotify Developer Dashboard Configuration
+The following redirect URIs must be configured in the Spotify Developer Dashboard:
+- **Development**: `http://127.0.0.1:4200`
+- **Production**: `https://album-anniversaries.firebaseapp.com/`
+
+**Important**: As of November 27, 2025, Spotify deprecated:
+- Implicit Grant flow (`response_type=token`)
+- HTTP redirect URIs (except for 127.0.0.1)
+- Localhost aliases
+
+The app has been migrated to PKCE to comply with these requirements.
 
 ### Data Processing Logic
 - **Anniversary Detection**: Albums where release date anniversary occurred in past week

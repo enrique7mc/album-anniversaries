@@ -8,7 +8,7 @@ import { Album } from './album';
 import { AppConfig, APP_CONFIG } from './app-config';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SpotifyService {
   private isDev: boolean;
@@ -41,8 +41,8 @@ export class SpotifyService {
   loadArtistsWithAlbums(accessToken: string): Observable<boolean> {
     const httpOptions = {
       headers: new HttpHeaders({
-        Authorization: `Bearer ${accessToken}`
-      })
+        Authorization: `Bearer ${accessToken}`,
+      }),
     };
 
     const done$ = new Subject<boolean>();
@@ -56,7 +56,7 @@ export class SpotifyService {
         artistsResponse = data.items.slice(0, 10);
       }
 
-      const artists: Artist[] = artistsResponse.map(item => {
+      const artists: Artist[] = artistsResponse.map((item) => {
         return {
           id: item.id,
           href: item.href,
@@ -64,40 +64,42 @@ export class SpotifyService {
           images: item.images,
           popularity: item.popularity,
           external_url: item.external_urls.spotify,
-          albums: []
+          albums: [],
         };
       });
 
       const artistAlbumRequests: Observable<any> = from(artists).pipe(
-        mergeMap(artist =>
+        mergeMap((artist) =>
           this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
             map((data: any) => {
               // TODO: extract this into its own function
               const albums: Album[] = data.items
-                .map(item => Object.assign({}, item, { artist_id: artist.id }))
-                .filter(item => item.release_date_precision === 'day')
+                .map((item) =>
+                  Object.assign({}, item, { artist_id: artist.id })
+                )
+                .filter((item) => item.release_date_precision === 'day')
                 .filter(
-                  item =>
+                  (item) =>
                     SpotifyService.albumHadBirthdayPastWeek(item) ||
                     SpotifyService.albumReleasedPastYear(item)
                 )
-                .map(item => ({
+                .map((item) => ({
                   id: item.id,
                   artist_id: item.artist_id,
                   name: item.name,
                   release_date: item.release_date,
                   release_date_precision: item.release_date_precision,
                   images: item.images,
-                  external_url: item.external_urls.spotify
+                  external_url: item.external_urls.spotify,
                 }));
               return albums;
             })
           )
         ),
-        filter(albums => albums.length > 0),
-        map(albums => {
+        filter((albums) => albums.length > 0),
+        map((albums) => {
           const matchingArtist = artists.find(
-            a => a.id === albums[0].artist_id
+            (a) => a.id === albums[0].artist_id
           );
           matchingArtist.albums.push(...albums);
 
@@ -106,11 +108,11 @@ export class SpotifyService {
       );
 
       artistAlbumRequests.pipe(bufferCount(5)).subscribe(
-        artistList => {
+        (artistList) => {
           this.dataStore.artists = [...this.dataStore.artists, ...artistList];
           this._artists.next(Object.assign({}, this.dataStore).artists);
         },
-        err => {
+        (err) => {
           // do nothing
         },
         () => {
@@ -144,23 +146,5 @@ export class SpotifyService {
     const millisecondsInAYear = 31536000000;
 
     return Math.abs(now - albumDate.getTime()) < millisecondsInAYear;
-  }
-
-  // TODO: replace with array.flat()
-  flatten(input) {
-    const stack = [...input];
-    const res = [];
-    while (stack.length) {
-      // pop value from stack
-      const next = stack.pop();
-      if (Array.isArray(next)) {
-        // push back array items, won't modify the original input
-        stack.push(...next);
-      } else {
-        res.push(next);
-      }
-    }
-    //reverse to restore input order
-    return res.reverse();
   }
 }
