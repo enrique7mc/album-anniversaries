@@ -1,6 +1,12 @@
+.card {
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .mat-card-image {
   object-fit: cover;
   height: 400px;
+  width: 100%;
 }
 
 .mat-nav-list {
