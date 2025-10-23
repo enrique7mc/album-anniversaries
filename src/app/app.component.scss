@@ -1,4 +1,20 @@
-@media only screen and (min-device-width: 320px) and (max-device-width: 800px) {
+body {
+  background-color: #fafafa;
+  padding-top: 64px;
+}
+
+.artist-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+
+  app-artist-card {
+    width: 100%;
+    min-width: 0; // Prevents grid blowout
+  }
+}
+
+@media only screen and (min-width: 320px) and (max-width: 799px) {
   .container {
     width: 90%;
     margin: 0 auto;
@@ -6,36 +22,21 @@
 
   .artist-list {
     max-width: 460px;
-  }
-
-  .artist-list > *:not(:last-child) {
-    margin-bottom: 8px;
+    gap: 8px;
   }
 }
 
-@media only screen and (min-device-width: 800px) {
+@media only screen and (min-width: 800px) {
   .container {
-    width: 50%;
+    width: 85%;
     margin: 0 auto;
   }
 
   .artist-list {
-    max-width: 600px;
+    max-width: 1400px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
-
-  .artist-list > *:not(:last-child) {
-    margin-bottom: 16px;
-  }
-}
-
-body {
-  background-color: #fafafa;
-  padding-top: 64px;
-}
-
-.artist-list {
-  display: flex;
-  flex-direction: column;
 }
 
 // Enhanced login card styling
