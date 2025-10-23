@@ -4,6 +4,17 @@ import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { SpotifyService } from './spotify.service';
 import { Album } from './album';
 
+// Shared helper function for creating test albums
+const createAlbum = (releaseDate: string): Album => ({
+  id: 'test-id',
+  artist_id: 'artist-id',
+  name: 'Test Album',
+  release_date: releaseDate,
+  release_date_precision: 'day',
+  images: [],
+  external_url: 'https://open.spotify.com/album/test'
+});
+
 describe('SpotifyService', () => {
   let service: SpotifyService;
 
@@ -20,16 +31,6 @@ describe('SpotifyService', () => {
   });
 
   describe('albumHadBirthdayPastWeek', () => {
-    const createAlbum = (releaseDate: string): Album => ({
-      id: 'test-id',
-      artist_id: 'artist-id',
-      name: 'Test Album',
-      release_date: releaseDate,
-      release_date_precision: 'day',
-      images: [],
-      external_url: 'https://open.spotify.com/album/test'
-    });
-
     it('should return true for album birthday exactly 1 day ago', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -140,16 +141,6 @@ describe('SpotifyService', () => {
   });
 
   describe('albumReleasedPastYear', () => {
-    const createAlbum = (releaseDate: string): Album => ({
-      id: 'test-id',
-      artist_id: 'artist-id',
-      name: 'Test Album',
-      release_date: releaseDate,
-      release_date_precision: 'day',
-      images: [],
-      external_url: 'https://open.spotify.com/album/test'
-    });
-
     it('should return true for album released yesterday', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
@@ -214,24 +205,24 @@ describe('SpotifyService', () => {
       expect(SpotifyService.albumReleasedPastYear(album)).toBe(false);
     });
 
-    it('should return true for album released 1 week from now (future)', () => {
+    it('should return false for album to be released 1 week from now (future)', () => {
       const nextWeek = new Date();
       nextWeek.setDate(nextWeek.getDate() + 7);
       const releaseDate = nextWeek.toISOString().split('T')[0];
 
       const album = createAlbum(releaseDate);
-      // Uses Math.abs, so future dates within a year should return true
-      expect(SpotifyService.albumReleasedPastYear(album)).toBe(true);
+      // Future releases should not count as "released in the past year"
+      expect(SpotifyService.albumReleasedPastYear(album)).toBe(false);
     });
 
-    it('should return true for album to be released in 6 months', () => {
+    it('should return false for album to be released in 6 months (future)', () => {
       const futureDate = new Date();
       futureDate.setMonth(futureDate.getMonth() + 6);
       const releaseDate = futureDate.toISOString().split('T')[0];
 
       const album = createAlbum(releaseDate);
-      // Uses Math.abs, so future dates within a year should return true
-      expect(SpotifyService.albumReleasedPastYear(album)).toBe(true);
+      // Future releases should not count as "released in the past year"
+      expect(SpotifyService.albumReleasedPastYear(album)).toBe(false);
     });
 
     it('should correctly parse ISO date format (Safari compatibility)', () => {

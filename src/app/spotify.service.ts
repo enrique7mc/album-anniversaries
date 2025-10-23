@@ -149,7 +149,9 @@ export class SpotifyService {
 
     const now = Date.now();
     const millisecondsInAYear = 31536000000;
+    const dateDiffMillis = now - albumDate.getTime();
 
-    return Math.abs(now - albumDate.getTime()) < millisecondsInAYear;
+    // Only count albums released in the past (not future)
+    return dateDiffMillis > 0 && dateDiffMillis < millisecondsInAYear;
   }
 }
