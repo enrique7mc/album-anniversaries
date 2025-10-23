@@ -95,9 +95,57 @@ The app has been migrated to PKCE to comply with these requirements.
 - SCSS for styling with Material theming
 
 ### Testing
+
+#### Test Framework
 - Jasmine/Karma setup for unit tests
 - Test files follow `*.spec.ts` naming convention
 - Coverage reports generated during test runs
+
+#### Test Commands
+```bash
+# Run all tests in watch mode (auto-reruns on file changes)
+npm test
+
+# Run all tests once and exit
+npm test -- --no-watch
+
+# Run tests with coverage report
+npm test -- --code-coverage --no-watch
+
+# Run specific test file
+npm test -- --include='**/spotify.service.spec.ts' --no-watch
+
+# View coverage report (after running with --code-coverage)
+open coverage/index.html  # macOS
+start coverage/index.html # Windows
+```
+
+#### Current Test Status (as of 2025-10-23)
+- **Total Tests**: 91 (all passing)
+- **Coverage**: 35.67%
+  - Statements: 35.67% (66/185)
+  - Branches: 30.3% (10/33)
+  - Functions: 29.82% (17/57)
+  - Lines: 35.71% (65/182)
+
+**Well-tested areas:**
+- ✅ PkceService (18 tests) - PKCE cryptographic operations
+- ✅ AlbumListItemComponent (37 tests) - Album display component
+- ✅ ArtistCardComponent (25 tests) - Artist card component
+- ✅ SpotifyService date logic (23 tests) - Date filtering for anniversaries
+
+**Areas needing tests:**
+- ⚠️ AppComponent OAuth/PKCE flow (~2 tests, needs ~25 more)
+- ⚠️ SpotifyService HTTP integration (~1 test, needs ~15 more)
+
+See [Issue #7](https://github.com/enrique7mc/album-anniversaries/issues/7) for detailed test coverage roadmap.
+
+#### Test Organization
+- `src/app/app.component.spec.ts` - Main app component tests
+- `src/app/spotify.service.spec.ts` - Spotify API service tests
+- `src/app/pkce.service.spec.ts` - PKCE authentication tests (comprehensive)
+- `src/app/artist-card/artist-card.component.spec.ts` - Artist card tests
+- `src/app/album-list-item/album-list-item.component.spec.ts` - Album list item tests (comprehensive)
 
 #### OnPush Change Detection Testing Pattern
 Components use `ChangeDetectionStrategy.OnPush` which requires special testing considerations:
@@ -131,3 +179,6 @@ it('should handle null name', () => {
 - SCSS preprocessing
 - Asset optimization for production builds
 - Firebase hosting deployment pipeline
+
+### Best Practices
+- Always run tests before committing changes (`npm test -- --no-watch`)

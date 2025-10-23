@@ -16,7 +16,31 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 
 ## Running unit tests
 
+### Basic Commands
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+### Additional Test Commands
+- `npm test` - Run all tests in watch mode (auto-reruns on file changes)
+- `npm test -- --no-watch` - Run all tests once and exit
+- `npm test -- --code-coverage` - Run tests with coverage report
+- `npm test -- --code-coverage --no-watch` - Run tests once with coverage report
+- `npm test -- --include='**/file.spec.ts' --no-watch` - Run specific test file
+
+### Coverage Reports
+After running tests with `--code-coverage`, view the detailed HTML report:
+```bash
+open coverage/index.html  # macOS
+```
+
+### Current Test Status
+- **Total Tests**: 91 (all passing)
+- **Coverage**: ~36%
+  - Statements: 35.67%
+  - Branches: 30.3%
+  - Functions: 29.82%
+  - Lines: 35.71%
+
+See [Issue #7](https://github.com/enrique7mc/album-anniversaries/issues/7) for remaining test coverage tasks.
 
 ## Running end-to-end tests
 
