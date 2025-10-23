@@ -30,7 +30,7 @@ The project uses Angular Material for UI components and Firebase for hosting and
 ## Architecture
 
 ### Key Components Structure
-- **AppComponent** (`src/app/app.component.ts`) - Main application component handling Spotify OAuth flow and displaying artist/album data
+- **AppComponent** (`src/app/app.component.ts`) - Main application component handling Spotify OAuth flow and displaying artist/album data. Manages OAuth state (random CSRF token) via localStorage and coordinates the PKCE authentication flow
 - **ArtistCardComponent** (`src/app/artist-card/`) - Displays individual artist information
 - **AlbumListItemComponent** (`src/app/album-list-item/`) - Displays individual album items
 - **MaterialModule** (`src/app/material/`) - Centralized Angular Material imports
@@ -40,10 +40,10 @@ The project uses Angular Material for UI components and Firebase for hosting and
   - Artist and album data fetching
   - Date filtering logic for anniversaries and recent releases
   - Development mode support with limited data
-- **PkceService** (`src/app/pkce.service.ts`) - Handles PKCE (Proof Key for Code Exchange) OAuth flow, includes:
+- **PkceService** (`src/app/pkce.service.ts`) - Handles PKCE (Proof Key for Code Exchange) cryptographic operations:
   - Code verifier generation (cryptographically random string)
   - Code challenge generation (SHA-256 hash of code verifier)
-  - SessionStorage management for OAuth state
+  - SessionStorage management for code verifier
 
 ### Data Models
 - **Artist** (`src/app/artist.ts`) - Artist data structure

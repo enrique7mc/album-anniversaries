@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewEncapsulation, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { client_id, redirect_uri, scope, stateKey } from './constants';
+import { client_id, redirect_uri, scope, stateKey, accessTokenKey, tokenExpiryKey } from './constants';
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
 import { Observable } from 'rxjs';
@@ -41,21 +41,27 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit() {
-    // Check for authorization code in URL (PKCE flow)
-    const code = this.getCode();
+    // First, check if there's a valid stored token
+    const storedToken = this.getStoredToken();
+    if (storedToken) {
+      this.accessToken = storedToken;
+    } else {
+      // No valid stored token, check for authorization code in URL (PKCE flow)
+      const code = this.getCode();
 
-    // Validate state BEFORE exchanging code (important: do this before state is cleared)
-    if (code && this.authError) {
-      console.error('Authentication error - state mismatch or missing state');
-      const urlParams = new URLSearchParams(window.location.search);
-      console.error('URL state:', urlParams.get('state'));
-      console.error('Stored state:', localStorage.getItem(stateKey));
-      return;
-    }
+      // Validate state BEFORE exchanging code (important: do this before state is cleared)
+      if (code && this.authError) {
+        console.error('Authentication error - state mismatch or missing state');
+        const urlParams = new URLSearchParams(window.location.search);
+        console.error('URL state:', urlParams.get('state'));
+        console.error('Stored state:', localStorage.getItem(stateKey));
+        return;
+      }
 
-    if (code) {
-      // Exchange authorization code for access token
-      await this.exchangeCodeForToken(code);
+      if (code) {
+        // Exchange authorization code for access token
+        await this.exchangeCodeForToken(code);
+      }
     }
 
     if (this.accessToken) {
@@ -118,19 +124,17 @@ export class AppComponent implements OnInit, OnDestroy {
     return (this.accessToken || code) && (state == null || state !== storedState);
   }
 
-  getCode(): string {
+  getCode(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('code');
   }
 
-  generateRandomString(length): string {
-    let text = '';
-    const possible =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < length; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
+  generateRandomString(length: number): string {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return Array.from(values)
+      .map((x) => possible[x % possible.length])
+      .join('');
   }
 
   async login() {
@@ -156,6 +160,54 @@ export class AppComponent implements OnInit, OnDestroy {
     url += `&code_challenge=${encodeURIComponent(codeChallenge)}`;
 
     window.location.href = url;
+  }
+
+  /**
+   * Checks if there's a valid stored access token
+   */
+  private hasValidStoredToken(): boolean {
+    const token = localStorage.getItem(accessTokenKey);
+    const expiryStr = localStorage.getItem(tokenExpiryKey);
+
+    if (!token || !expiryStr) {
+      return false;
+    }
+
+    const expiryTime = parseInt(expiryStr, 10);
+    const now = Date.now();
+
+    // Token is valid if it hasn't expired yet
+    return now < expiryTime;
+  }
+
+  /**
+   * Retrieves the stored access token if valid
+   */
+  private getStoredToken(): string | null {
+    if (this.hasValidStoredToken()) {
+      return localStorage.getItem(accessTokenKey);
+    }
+    // Clear expired token
+    this.clearStoredToken();
+    return null;
+  }
+
+  /**
+   * Stores the access token and its expiry time
+   */
+  private storeToken(accessToken: string, expiresIn: number): void {
+    localStorage.setItem(accessTokenKey, accessToken);
+    // Calculate expiry time (current time + expires_in seconds - 60 second buffer)
+    const expiryTime = Date.now() + (expiresIn - 60) * 1000;
+    localStorage.setItem(tokenExpiryKey, expiryTime.toString());
+  }
+
+  /**
+   * Clears the stored token and expiry
+   */
+  private clearStoredToken(): void {
+    localStorage.removeItem(accessTokenKey);
+    localStorage.removeItem(tokenExpiryKey);
   }
 
   /**
@@ -191,6 +243,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
       this.accessToken = response.access_token;
 
+      // Store token with expiry time (expires_in is in seconds)
+      const expiresIn = response.expires_in || 3600; // Default to 1 hour if not provided
+      this.storeToken(this.accessToken, expiresIn);
+
       // Clean up: remove code verifier and clear URL params
       this.pkceService.clearCodeVerifier();
       localStorage.removeItem(stateKey);
@@ -200,6 +256,14 @@ export class AppComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error exchanging code for token:', error);
     }
+  }
+
+  /**
+   * Logs out the user by clearing the stored token
+   */
+  logout(): void {
+    this.accessToken = null;
+    this.clearStoredToken();
   }
 
 }

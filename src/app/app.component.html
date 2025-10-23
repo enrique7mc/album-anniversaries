@@ -1,5 +1,15 @@
 <mat-toolbar class="sticky-nav" color="primary">
   <span>{{ title }}</span>
+  <span class="spacer"></span>
+  <button
+    *ngIf="accessToken"
+    mat-button
+    (click)="logout()"
+    class="logout-button"
+  >
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
 </mat-toolbar>
 <mat-progress-bar
   *ngIf="loading"
