@@ -43,9 +43,15 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
   padding: 24px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: auto;
+  box-sizing: border-box;
 
   .login-card {
     max-width: 450px;
