@@ -43,6 +43,9 @@ web/firebase-config.js # Or any other file containing Firebase configuration sec
 functions/node_modules/ # If you're using Cloud Functions with Node.js
 functions/lib/ # Compiled JavaScript from TypeScript functions
 
+# AI/IDE tooling
+.gemini/
+
 # System files
 .DS_Store
 Thumbs.db
