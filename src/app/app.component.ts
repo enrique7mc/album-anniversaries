@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewEncapsulation, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { client_id, redirect_uri, scope, stateKey } from './constants';
+import { client_id, redirect_uri, scope, stateKey, accessTokenKey, tokenExpiryKey } from './constants';
 import { SpotifyService } from './spotify.service';
+import { PkceService } from './pkce.service';
 import { Observable } from 'rxjs';
 import { Artist } from './artist';
 import { Album } from './album';
@@ -19,7 +21,6 @@ import { Functions } from '@angular/fire/functions';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title: string;
-  params = null;
   accessToken: string;
   showAlbumBirthdayList: boolean = false;
   artists$: Observable<Artist[]>;
@@ -32,22 +33,36 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private spotifyService: SpotifyService,
+    private pkceService: PkceService,
+    private http: HttpClient,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {
     this.title = config.title;
   }
 
-  ngOnInit() {
-    this.params = this.getHashParams();
-    this.accessToken = this.params['access_token'];
-    console.log(this.getCode());
+  async ngOnInit() {
+    // First, check if there's a valid stored token
+    const storedToken = this.getStoredToken();
+    if (storedToken) {
+      this.accessToken = storedToken;
+    } else {
+      // No valid stored token, check for authorization code in URL (PKCE flow)
+      const code = this.getCode();
 
-    if (this.authError) {
-      console.error('There was an error during the authentication');
-      return;
+      // Validate state BEFORE exchanging code (important: do this before state is cleared)
+      if (code && this.authError) {
+        console.error('Authentication error - state mismatch or missing state');
+        const urlParams = new URLSearchParams(window.location.search);
+        console.error('URL state:', urlParams.get('state'));
+        console.error('Stored state:', localStorage.getItem(stateKey));
+        return;
+      }
+
+      if (code) {
+        // Exchange authorization code for access token
+        await this.exchangeCodeForToken(code);
+      }
     }
-
-    // localStorage.removeItem(stateKey);
 
     if (this.accessToken) {
       this.loading = true;
@@ -99,59 +114,156 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   get authError(): boolean {
-    let state = this.params['state'];
-    let storedState = localStorage.getItem(stateKey);
+    // Check for state in URL query parameters (PKCE uses query params, not hash)
+    const urlParams = new URLSearchParams(window.location.search);
+    const state = urlParams.get('state');
+    const storedState = localStorage.getItem(stateKey);
 
-    return this.accessToken && (state == null || state !== storedState);
+    // Error if we have a code or token but state doesn't match
+    const code = this.getCode();
+    return (this.accessToken || code) && (state == null || state !== storedState);
   }
 
-  getCode(): string {
+  getCode(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('code');
   }
 
-  getHashParams(): any {
-    let hashParams = {};
-    let e,
-      r = /([^&;=]+)=?([^&;]*)/g,
-      q = window.location.hash.substring(1);
-    while ((e = r.exec(q))) {
-      hashParams[e[1]] = decodeURIComponent(e[2]);
-    }
-    return hashParams;
+  generateRandomString(length: number): string {
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const values = crypto.getRandomValues(new Uint8Array(length));
+    return Array.from(values)
+      .map((x) => possible[x % possible.length])
+      .join('');
   }
 
-  generateRandomString(length): string {
-    let text = '';
-    const possible =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < length; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-  }
+  async login() {
+    // Generate PKCE parameters
+    const codeVerifier = this.pkceService.generateCodeVerifier();
+    const codeChallenge = await this.pkceService.generateCodeChallenge(codeVerifier);
 
-  login() {
-    let state = this.generateRandomString(16);
+    // Store code verifier for later use during token exchange
+    this.pkceService.storeCodeVerifier(codeVerifier);
+
+    // Generate and store state for CSRF protection
+    const state = this.generateRandomString(16);
     localStorage.setItem(stateKey, state);
-    var url = 'https://accounts.spotify.com/authorize';
-    url += '?response_type=token';
+
+    // Build authorization URL with PKCE
+    let url = 'https://accounts.spotify.com/authorize';
+    url += '?response_type=code';  // Changed from 'token' to 'code' for PKCE
     url += `&client_id=${encodeURIComponent(client_id)}`;
     url += `&scope=${encodeURIComponent(scope)}`;
     url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
     url += `&state=${encodeURIComponent(state)}`;
+    url += `&code_challenge_method=S256`;
+    url += `&code_challenge=${encodeURIComponent(codeChallenge)}`;
+
     window.location.href = url;
   }
 
-  authorize() {
-    let state = this.generateRandomString(16);
-    localStorage.setItem(stateKey, state);
-    var url = 'https://accounts.spotify.com/authorize';
-    url += '?response_type=code';
-    url += `&client_id=${encodeURIComponent(client_id)}`;
-    url += `&scope=${encodeURIComponent(scope)}`;
-    url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
-    url += `&state=${encodeURIComponent(state)}`;
-    window.location.href = url;
+  /**
+   * Checks if there's a valid stored access token
+   */
+  private hasValidStoredToken(): boolean {
+    const token = localStorage.getItem(accessTokenKey);
+    const expiryStr = localStorage.getItem(tokenExpiryKey);
+
+    if (!token || !expiryStr) {
+      return false;
+    }
+
+    const expiryTime = parseInt(expiryStr, 10);
+    const now = Date.now();
+
+    // Token is valid if it hasn't expired yet
+    return now < expiryTime;
   }
+
+  /**
+   * Retrieves the stored access token if valid
+   */
+  private getStoredToken(): string | null {
+    if (this.hasValidStoredToken()) {
+      return localStorage.getItem(accessTokenKey);
+    }
+    // Clear expired token
+    this.clearStoredToken();
+    return null;
+  }
+
+  /**
+   * Stores the access token and its expiry time
+   */
+  private storeToken(accessToken: string, expiresIn: number): void {
+    localStorage.setItem(accessTokenKey, accessToken);
+    // Calculate expiry time (current time + expires_in seconds - 60 second buffer)
+    const expiryTime = Date.now() + (expiresIn - 60) * 1000;
+    localStorage.setItem(tokenExpiryKey, expiryTime.toString());
+  }
+
+  /**
+   * Clears the stored token and expiry
+   */
+  private clearStoredToken(): void {
+    localStorage.removeItem(accessTokenKey);
+    localStorage.removeItem(tokenExpiryKey);
+  }
+
+  /**
+   * Exchanges the authorization code for an access token using PKCE
+   */
+  async exchangeCodeForToken(code: string): Promise<void> {
+    const codeVerifier = this.pkceService.getCodeVerifier();
+
+    if (!codeVerifier) {
+      console.error('Code verifier not found in session storage');
+      return;
+    }
+
+    // Prepare the token exchange request
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: this.config.redirectUrl,
+      client_id: client_id,
+      code_verifier: codeVerifier
+    });
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/x-www-form-urlencoded'
+    });
+
+    try {
+      const response: any = await this.http.post(
+        'https://accounts.spotify.com/api/token',
+        body.toString(),
+        { headers }
+      ).toPromise();
+
+      this.accessToken = response.access_token;
+
+      // Store token with expiry time (expires_in is in seconds)
+      const expiresIn = response.expires_in || 3600; // Default to 1 hour if not provided
+      this.storeToken(this.accessToken, expiresIn);
+
+      // Clean up: remove code verifier and clear URL params
+      this.pkceService.clearCodeVerifier();
+      localStorage.removeItem(stateKey);
+
+      // Clean the URL to remove the authorization code
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error('Error exchanging code for token:', error);
+    }
+  }
+
+  /**
+   * Logs out the user by clearing the stored token
+   */
+  logout(): void {
+    this.accessToken = null;
+    this.clearStoredToken();
+  }
+
 }

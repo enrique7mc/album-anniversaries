@@ -6,8 +6,8 @@ export const environment = {
   production: false,
   spotify: {
     title: 'Album anniversaries dev',
-    // redirectUrl: 'https://4200-firebase-album-anniversaries-1758421714592.cluster-qewex6ficndhsr4lj7gyhcsnbe.cloudworkstations.dev/'
-    redirectUrl: 'http://localhost:4200',
+    // Note: Using 127.0.0.1 instead of localhost per Spotify's OAuth requirements
+    redirectUrl: 'http://127.0.0.1:4200',
   },
   firebase: {
     apiKey: 'AIzaSyDNwMtOBcQFPxpdHwsXyC98IfcYP8qiZ70',
