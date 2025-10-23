@@ -49,7 +49,8 @@ export class SpotifyService {
 
     // TODO: try to compose the artist and albums observables instead of
     // handling a nested subscription.
-    this.http.get(this.artistsUrl, httpOptions).subscribe((data: any) => {
+    this.http.get(this.artistsUrl, httpOptions).subscribe(
+      (data: any) => {
       let artistsResponse = data.items;
 
       if (this.isDev) {
@@ -113,13 +114,16 @@ export class SpotifyService {
           this._artists.next(Object.assign({}, this.dataStore).artists);
         },
         (err) => {
-          // do nothing
+          console.error('[SpotifyService] Error loading album data:', err);
         },
         () => {
-          // <----
           done$.next(true);
         }
       );
+    },
+    (error) => {
+      console.error('[SpotifyService] Error loading artists:', error);
+      done$.next(false);
     });
 
     return done$.asObservable();
@@ -128,9 +132,10 @@ export class SpotifyService {
   // TODO: refactor this to make more generic
   static albumHadBirthdayPastWeek(album: Album): boolean {
     const today = new Date(Date.now());
-    const albumDate = new Date(
-      Date.parse(`${album.release_date} 00:00:00 -0800`)
-    );
+
+    // Parse ISO date string (YYYY-MM-DD) - works across all browsers including Safari
+    const albumDate = new Date(album.release_date + 'T00:00:00');
+
     albumDate.setFullYear(today.getFullYear());
     const millisecondsInAWeek = 604800000;
     const dateDiffMillis = today.getTime() - albumDate.getTime();
@@ -139,9 +144,9 @@ export class SpotifyService {
   }
 
   static albumReleasedPastYear(album: Album): boolean {
-    const albumDate = new Date(
-      Date.parse(`${album.release_date} 00:00:00 -0800`)
-    );
+    // Parse ISO date string (YYYY-MM-DD) - works across all browsers including Safari
+    const albumDate = new Date(album.release_date + 'T00:00:00');
+
     const now = Date.now();
     const millisecondsInAYear = 31536000000;
 
