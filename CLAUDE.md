@@ -179,3 +179,6 @@ it('should handle null name', () => {
 - SCSS preprocessing
 - Asset optimization for production builds
 - Firebase hosting deployment pipeline
+
+### Best Practices
+- Always run tests before committing changes (`npm test -- --no-watch`)
