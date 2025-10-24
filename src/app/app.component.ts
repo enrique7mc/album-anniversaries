@@ -117,7 +117,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private initializeTheme(): void {
-    this.themeService.setDarkTheme(this.themeService.isDarkTheme());
+    this.themeService.applyCurrentTheme();
   }
 
   get authError(): boolean {

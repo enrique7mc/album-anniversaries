@@ -20,6 +20,10 @@ export class ThemeService {
     this.setDarkTheme(!this.isDarkTheme());
   }
 
+  applyCurrentTheme(): void {
+    this.updateBodyClass();
+  }
+
   private updateBodyClass(): void {
     const body = document.getElementsByTagName('body')[0];
     if (this.isDarkTheme()) {
