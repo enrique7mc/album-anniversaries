@@ -7,6 +7,7 @@ import { PkceService } from './pkce.service';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
 import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
+import { ThemeSwitcherComponent } from './theme-switcher/theme-switcher.component';
 import { Functions } from '@angular/fire/functions';
 
 describe('AppComponent', () => {
@@ -24,7 +25,7 @@ describe('AppComponent', () => {
         { provide: Functions, useValue: functionsSpy },
         PkceService,
       ],
-      declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
+      declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent, ThemeSwitcherComponent],
     }).compileComponents();
   }));
 

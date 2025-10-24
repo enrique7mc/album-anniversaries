@@ -1,4 +1,27 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use 'theme' as theme;
+
+@include mat.core();
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+@mixin apply-theme($theme) {
+  @include mat.all-component-themes($theme);
+  @include mat.typography-hierarchy($theme);
+
+  $color-config: mat.get-color-config($theme);
+  $background: map-get($color-config, 'background');
+  $foreground: map-get($color-config, 'foreground');
+
+  background-color: mat.get-color-from-palette($background, 'background');
+  color: mat.get-color-from-palette($foreground, 'base');
+}
+
+.light-theme {
+  @include apply-theme(theme.$light-theme);
+}
+
+.dark-theme {
+  @include apply-theme(theme.$dark-theme);
+}

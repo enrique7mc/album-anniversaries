@@ -12,6 +12,7 @@ import { APP_CONFIG, AppConfig } from './app-config';
 import { Subscription, Subject } from 'rxjs';
 import { map, takeUntil, take } from 'rxjs/operators';
 import { Functions } from '@angular/fire/functions';
+import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-root',
@@ -35,12 +36,14 @@ export class AppComponent implements OnInit, OnDestroy {
     private spotifyService: SpotifyService,
     private pkceService: PkceService,
     private http: HttpClient,
+    private themeService: ThemeService,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {
     this.title = config.title;
   }
 
   async ngOnInit() {
+    this.initializeTheme();
     // First, check if there's a valid stored token
     const storedToken = this.getStoredToken();
     if (storedToken) {
@@ -111,6 +114,10 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this._destroyed$.next();
     this._destroyed$.complete();
+  }
+
+  private initializeTheme(): void {
+    this.themeService.applyCurrentTheme();
   }
 
   get authError(): boolean {

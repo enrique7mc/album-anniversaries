@@ -157,12 +157,12 @@ describe('ArtistCardComponent', () => {
     });
 
     it('should render "View on Spotify" link with correct href', () => {
-      const linkElement = debugElement.query(By.css('a[mat-button]'));
+      const linkElement = debugElement.query(By.css('a[mat-raised-button]'));
       expect(linkElement.nativeElement.href).toBe('https://open.spotify.com/artist/artist-123');
     });
 
     it('should render "View on Spotify" link with target="_blank"', () => {
-      const linkElement = debugElement.query(By.css('a[mat-button]'));
+      const linkElement = debugElement.query(By.css('a[mat-raised-button]'));
       expect(linkElement.nativeElement.target).toBe('_blank');
     });
 
