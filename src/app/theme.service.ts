@@ -7,7 +7,12 @@ export class ThemeService {
   private readonly themeKey = 'theme';
 
   isDarkTheme(): boolean {
-    return localStorage.getItem(this.themeKey) === 'dark';
+    const storedTheme = localStorage.getItem(this.themeKey);
+    if (storedTheme) {
+      return storedTheme === 'dark';
+    }
+    // Default to system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
   setDarkTheme(isDark: boolean): void {
@@ -25,7 +30,7 @@ export class ThemeService {
   }
 
   private updateBodyClass(): void {
-    const body = document.getElementsByTagName('body')[0];
+    const body = document.body;
     if (this.isDarkTheme()) {
       body.classList.add('dark-theme');
       body.classList.remove('light-theme');

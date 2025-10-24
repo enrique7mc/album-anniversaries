@@ -3,11 +3,25 @@ import { ThemeService } from './theme.service';
 
 describe('ThemeService', () => {
   let service: ThemeService;
+  let matchMediaSpy: jasmine.Spy;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(ThemeService);
     localStorage.clear();
+
+    // Mock window.matchMedia
+    matchMediaSpy = jasmine.createSpy('matchMedia').and.returnValue({
+      matches: false,
+      media: '(prefers-color-scheme: dark)',
+      addEventListener: jasmine.createSpy('addEventListener'),
+      removeEventListener: jasmine.createSpy('removeEventListener')
+    } as any);
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: matchMediaSpy
+    });
   });
 
   afterEach(() => {
@@ -21,17 +35,25 @@ describe('ThemeService', () => {
   });
 
   describe('isDarkTheme', () => {
-    it('should return false when no theme is stored', () => {
+    it('should return false when no theme is stored and system prefers light', () => {
+      matchMediaSpy.and.returnValue({ matches: false } as any);
       expect(service.isDarkTheme()).toBe(false);
     });
 
-    it('should return true when dark theme is stored', () => {
-      localStorage.setItem('theme', 'dark');
+    it('should return true when no theme is stored and system prefers dark', () => {
+      matchMediaSpy.and.returnValue({ matches: true } as any);
       expect(service.isDarkTheme()).toBe(true);
     });
 
-    it('should return false when light theme is stored', () => {
+    it('should return true when dark theme is stored (ignoring system preference)', () => {
+      localStorage.setItem('theme', 'dark');
+      matchMediaSpy.and.returnValue({ matches: false } as any);
+      expect(service.isDarkTheme()).toBe(true);
+    });
+
+    it('should return false when light theme is stored (ignoring system preference)', () => {
       localStorage.setItem('theme', 'light');
+      matchMediaSpy.and.returnValue({ matches: true } as any);
       expect(service.isDarkTheme()).toBe(false);
     });
   });
@@ -89,10 +111,18 @@ describe('ThemeService', () => {
       expect(document.body.classList.contains('dark-theme')).toBe(false);
     });
 
-    it('should apply light-theme class when no theme is stored (default)', () => {
+    it('should apply light-theme class when no theme is stored and system prefers light', () => {
+      matchMediaSpy.and.returnValue({ matches: false } as any);
       service.applyCurrentTheme();
       expect(document.body.classList.contains('light-theme')).toBe(true);
       expect(document.body.classList.contains('dark-theme')).toBe(false);
+    });
+
+    it('should apply dark-theme class when no theme is stored and system prefers dark', () => {
+      matchMediaSpy.and.returnValue({ matches: true } as any);
+      service.applyCurrentTheme();
+      expect(document.body.classList.contains('dark-theme')).toBe(true);
+      expect(document.body.classList.contains('light-theme')).toBe(false);
     });
   });
 });
