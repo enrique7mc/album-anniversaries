@@ -1,18 +1,13 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ThemeService {
   private readonly themeKey = 'theme';
 
   isDarkTheme(): boolean {
-    const storedTheme = localStorage.getItem(this.themeKey);
-    if (storedTheme) {
-      return storedTheme === 'dark';
-    }
-    // Default to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return localStorage.getItem(this.themeKey) === 'dark';
   }
 
   setDarkTheme(isDark: boolean): void {

@@ -214,7 +214,7 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = artistNoUrl;
       newFixture.detectChanges();
 
-      const linkElement = newFixture.nativeElement.querySelector('a[mat-button]');
+      const linkElement = newFixture.nativeElement.querySelector('a[mat-raised-button]');
       expect(linkElement.getAttribute('href')).toBe('');
     });
 
@@ -260,7 +260,7 @@ describe('ArtistCardComponent', () => {
       const newDebugElement = newFixture.debugElement;
       const titleElement = newDebugElement.query(By.css('mat-card-title'));
       const imageElement = newDebugElement.query(By.css('img[mat-card-image]'));
-      const linkElement = newDebugElement.query(By.css('a[mat-button]'));
+      const linkElement = newDebugElement.query(By.css('a[mat-raised-button]'));
       const albumElements = newDebugElement.queryAll(By.css('app-album-list-item'));
 
       expect(titleElement.nativeElement.textContent.trim()).toBe('New Artist Name');
