@@ -149,9 +149,33 @@ h1 {
   left: 0;
   top: 0;
   z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .header-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: 500;
+  }
 
   .spacer {
     flex: 1 1 auto;
+  }
+
+  .header-chips {
+    margin-right: 8px;
+
+    mat-chip {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      color: white !important;
+      font-weight: 500;
+    }
   }
 
   .logout-button {

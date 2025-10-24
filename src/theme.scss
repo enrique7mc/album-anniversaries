@@ -1,6 +1,22 @@
 @use '@angular/material' as mat;
 
-$typography: mat.define-typography-config();
+// Define custom typography configuration
+// Using Poppins for headings and Inter for body text
+$typography: mat.define-typography-config(
+  $font-family: '"Inter", sans-serif',
+  $headline-1: mat.define-typography-level(96px, 96px, 700, '"Poppins", sans-serif'),
+  $headline-2: mat.define-typography-level(60px, 60px, 600, '"Poppins", sans-serif'),
+  $headline-3: mat.define-typography-level(48px, 50px, 600, '"Poppins", sans-serif'),
+  $headline-4: mat.define-typography-level(34px, 40px, 600, '"Poppins", sans-serif'),
+  $headline-5: mat.define-typography-level(24px, 32px, 500, '"Poppins", sans-serif'),
+  $headline-6: mat.define-typography-level(20px, 32px, 500, '"Poppins", sans-serif'),
+  $subtitle-1: mat.define-typography-level(16px, 28px, 500, '"Inter", sans-serif'),
+  $subtitle-2: mat.define-typography-level(14px, 24px, 500, '"Inter", sans-serif'),
+  $body-1: mat.define-typography-level(16px, 24px, 400, '"Inter", sans-serif'),
+  $body-2: mat.define-typography-level(14px, 20px, 400, '"Inter", sans-serif'),
+  $caption: mat.define-typography-level(12px, 20px, 400, '"Inter", sans-serif'),
+  $button: mat.define-typography-level(14px, 14px, 500, '"Inter", sans-serif'),
+);
 
 // Light theme
 $light-primary: mat.define-palette(mat.$indigo-palette);

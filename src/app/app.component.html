@@ -1,6 +1,10 @@
 <mat-toolbar class="sticky-nav" color="primary">
-  <span>{{ title }}</span>
+  <mat-icon class="header-icon">album</mat-icon>
+  <span class="title">{{ title }}</span>
   <span class="spacer"></span>
+  <mat-chip-set *ngIf="accessToken" class="header-chips">
+    <mat-chip>This Week</mat-chip>
+  </mat-chip-set>
   <app-theme-switcher></app-theme-switcher>
   <button
     *ngIf="accessToken"
