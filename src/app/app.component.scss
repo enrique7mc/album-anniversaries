@@ -1,6 +1,14 @@
+@use '@angular/material' as mat;
+@use '../theme' as theme;
+
 body {
-  background-color: #fafafa;
   padding-top: 64px;
+}
+
+h1 {
+  margin: 24px 0 16px 0;
+  font-size: 24px;
+  font-weight: 500;
 }
 
 .artist-list {
@@ -50,7 +58,6 @@ body {
   right: 0;
   bottom: 0;
   padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   overflow: auto;
   box-sizing: border-box;
 
@@ -103,7 +110,6 @@ body {
 
       p {
         font-size: 14px;
-        color: #666;
         line-height: 1.6;
         margin: 0;
       }
@@ -152,5 +158,22 @@ body {
     mat-icon {
       margin-right: 4px;
     }
+  }
+}
+
+// Theme-specific styles
+.light-theme {
+  .login-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+}
+
+.dark-theme {
+  .login-container {
+    background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+  }
+
+  h1 {
+    color: rgba(255, 255, 255, 0.87);
   }
 }
