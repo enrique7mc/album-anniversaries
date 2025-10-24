@@ -4,6 +4,20 @@ import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { SpotifyService } from './spotify.service';
 import { Album } from './album';
 
+// Helper to create ISO date string at local midnight, avoiding UTC timezone issues
+const createLocalDateString = (daysOffset: number, year?: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  if (year !== undefined) {
+    date.setFullYear(year);
+  }
+  // Use local date components to avoid UTC timezone shifts
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 // Shared helper function for creating test albums
 const createAlbum = (releaseDate: string): Album => ({
   id: 'test-id',
@@ -62,10 +76,7 @@ describe('SpotifyService', () => {
     });
 
     it('should return false for album birthday exactly 7 days ago (edge of window)', () => {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      sevenDaysAgo.setFullYear(2012);
-      const releaseDate = sevenDaysAgo.toISOString().split('T')[0];
+      const releaseDate = createLocalDateString(-7, 2012);
 
       const album = createAlbum(releaseDate);
       expect(SpotifyService.albumHadBirthdayPastWeek(album)).toBe(false);
@@ -82,9 +93,7 @@ describe('SpotifyService', () => {
     });
 
     it('should return true for album birthday today (if current time is past midnight)', () => {
-      const today = new Date();
-      today.setFullYear(2008);
-      const releaseDate = today.toISOString().split('T')[0];
+      const releaseDate = createLocalDateString(0, 2008);
 
       const album = createAlbum(releaseDate);
       // Birthday today: albumDate is set to midnight today, and current time is likely after midnight
@@ -113,8 +122,7 @@ describe('SpotifyService', () => {
     });
 
     it('should return true for albums released today this year (counts as birthday)', () => {
-      const thisYear = new Date();
-      const releaseDate = thisYear.toISOString().split('T')[0];
+      const releaseDate = createLocalDateString(0);
 
       const album = createAlbum(releaseDate);
       // Album released today: when set to this year (no change), it's the same as birthday today
@@ -151,8 +159,7 @@ describe('SpotifyService', () => {
     });
 
     it('should return true for album released today', () => {
-      const today = new Date();
-      const releaseDate = today.toISOString().split('T')[0];
+      const releaseDate = createLocalDateString(0);
 
       const album = createAlbum(releaseDate);
       expect(SpotifyService.albumReleasedPastYear(album)).toBe(true);
@@ -177,9 +184,7 @@ describe('SpotifyService', () => {
     });
 
     it('should return false for album released exactly 365 days ago (just at edge)', () => {
-      const oneYearAgo = new Date();
-      oneYearAgo.setDate(oneYearAgo.getDate() - 365);
-      const releaseDate = oneYearAgo.toISOString().split('T')[0];
+      const releaseDate = createLocalDateString(-365);
 
       const album = createAlbum(releaseDate);
       // 365 days is exactly 31,536,000,000 ms, but due to time precision it's likely just over
