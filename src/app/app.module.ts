@@ -13,18 +13,23 @@ import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
 
 @NgModule({
-  declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent, ThemeSwitcherComponent],
+  declarations: [
+    AppComponent,
+    ArtistCardComponent,
+    AlbumListItemComponent,
+    ThemeSwitcherComponent,
+  ],
   imports: [
     BrowserModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    MaterialModule
+    MaterialModule,
   ],
   providers: [
     { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG },
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideFunctions(() => getFunctions())
+    provideFunctions(() => getFunctions()),
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {}

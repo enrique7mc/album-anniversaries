@@ -2,7 +2,7 @@ import {
   Component,
   ChangeDetectionStrategy,
   Input,
-  ViewEncapsulation
+  ViewEncapsulation,
 } from '@angular/core';
 import { Album } from '../album';
 
@@ -10,7 +10,7 @@ import { Album } from '../album';
   selector: 'app-album-list-item',
   templateUrl: './album-list-item.component.html',
   styleUrls: ['./album-list-item.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AlbumListItemComponent {
   @Input()

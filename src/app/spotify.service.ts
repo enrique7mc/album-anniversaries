@@ -17,7 +17,10 @@ export class SpotifyService {
     artists: Artist[];
   };
 
-  constructor(private http: HttpClient, @Inject(APP_CONFIG) config: AppConfig) {
+  constructor(
+    private http: HttpClient,
+    @Inject(APP_CONFIG) config: AppConfig,
+  ) {
     this.isDev = config.isDev;
     this.dataStore = { artists: [] };
     this._artists = new BehaviorSubject<Artist[]>([]);
@@ -51,80 +54,81 @@ export class SpotifyService {
     // handling a nested subscription.
     this.http.get(this.artistsUrl, httpOptions).subscribe(
       (data: any) => {
-      let artistsResponse = data.items;
+        let artistsResponse = data.items;
 
-      if (this.isDev) {
-        artistsResponse = data.items.slice(0, 10);
-      }
-
-      const artists: Artist[] = artistsResponse.map((item) => {
-        return {
-          id: item.id,
-          href: item.href,
-          name: item.name,
-          images: item.images,
-          popularity: item.popularity,
-          external_url: item.external_urls.spotify,
-          albums: [],
-        };
-      });
-
-      const artistAlbumRequests: Observable<any> = from(artists).pipe(
-        mergeMap((artist) =>
-          this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
-            map((data: any) => {
-              // TODO: extract this into its own function
-              const albums: Album[] = data.items
-                .map((item) =>
-                  Object.assign({}, item, { artist_id: artist.id })
-                )
-                .filter((item) => item.release_date_precision === 'day')
-                .filter(
-                  (item) =>
-                    SpotifyService.albumHadBirthdayPastWeek(item) ||
-                    SpotifyService.albumReleasedPastYear(item)
-                )
-                .map((item) => ({
-                  id: item.id,
-                  artist_id: item.artist_id,
-                  name: item.name,
-                  release_date: item.release_date,
-                  release_date_precision: item.release_date_precision,
-                  images: item.images,
-                  external_url: item.external_urls.spotify,
-                }));
-              return albums;
-            })
-          )
-        ),
-        filter((albums) => albums.length > 0),
-        map((albums) => {
-          const matchingArtist = artists.find(
-            (a) => a.id === albums[0].artist_id
-          );
-          matchingArtist.albums.push(...albums);
-
-          return matchingArtist;
-        })
-      );
-
-      artistAlbumRequests.pipe(bufferCount(5)).subscribe(
-        (artistList) => {
-          this.dataStore.artists = [...this.dataStore.artists, ...artistList];
-          this._artists.next(Object.assign({}, this.dataStore).artists);
-        },
-        (err) => {
-          console.error('[SpotifyService] Error loading album data:', err);
-        },
-        () => {
-          done$.next(true);
+        if (this.isDev) {
+          artistsResponse = data.items.slice(0, 10);
         }
-      );
-    },
-    (error) => {
-      console.error('[SpotifyService] Error loading artists:', error);
-      done$.next(false);
-    });
+
+        const artists: Artist[] = artistsResponse.map((item) => {
+          return {
+            id: item.id,
+            href: item.href,
+            name: item.name,
+            images: item.images,
+            popularity: item.popularity,
+            external_url: item.external_urls.spotify,
+            albums: [],
+          };
+        });
+
+        const artistAlbumRequests: Observable<any> = from(artists).pipe(
+          mergeMap((artist) =>
+            this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
+              map((data: any) => {
+                // TODO: extract this into its own function
+                const albums: Album[] = data.items
+                  .map((item) =>
+                    Object.assign({}, item, { artist_id: artist.id }),
+                  )
+                  .filter((item) => item.release_date_precision === 'day')
+                  .filter(
+                    (item) =>
+                      SpotifyService.albumHadBirthdayPastWeek(item) ||
+                      SpotifyService.albumReleasedPastYear(item),
+                  )
+                  .map((item) => ({
+                    id: item.id,
+                    artist_id: item.artist_id,
+                    name: item.name,
+                    release_date: item.release_date,
+                    release_date_precision: item.release_date_precision,
+                    images: item.images,
+                    external_url: item.external_urls.spotify,
+                  }));
+                return albums;
+              }),
+            ),
+          ),
+          filter((albums) => albums.length > 0),
+          map((albums) => {
+            const matchingArtist = artists.find(
+              (a) => a.id === albums[0].artist_id,
+            );
+            matchingArtist.albums.push(...albums);
+
+            return matchingArtist;
+          }),
+        );
+
+        artistAlbumRequests.pipe(bufferCount(5)).subscribe(
+          (artistList) => {
+            this.dataStore.artists = [...this.dataStore.artists, ...artistList];
+            this._artists.next(Object.assign({}, this.dataStore).artists);
+          },
+          (err) => {
+            console.error('[SpotifyService] Error loading album data:', err);
+          },
+          () => {
+            done$.next(true);
+          },
+        );
+      },
+      (error) => {
+        console.error('[SpotifyService] Error loading artists:', error);
+        done$.next(false);
+      },
+    );
 
     return done$.asObservable();
   }

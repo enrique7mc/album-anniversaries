@@ -6,7 +6,7 @@ import { Album } from '../album';
   selector: 'app-artist-card',
   templateUrl: './artist-card.component.html',
   styleUrls: ['./artist-card.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtistCardComponent {
   @Input()

@@ -67,7 +67,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private http: HttpClient,
     private themeService: ThemeService,
     private ngZone: NgZone,
-    @Inject(APP_CONFIG) private config: AppConfig
+    @Inject(APP_CONFIG) private config: AppConfig,
   ) {
     this.title = config.title;
   }
@@ -100,7 +100,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.accessToken) {
       this.loading = true;
       const doneLoading$ = this.spotifyService.loadArtistsWithAlbums(
-        this.accessToken
+        this.accessToken,
       );
 
       // TODO(me): figure out a better way to do the subscription logic.
@@ -111,12 +111,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         map((artists) =>
           artists.filter((artist) => {
             artist.albums = artist.albums.filter(
-              SpotifyService.albumReleasedPastYear
+              SpotifyService.albumReleasedPastYear,
             );
             return artist.albums.length > 0;
-          })
+          }),
         ),
-        takeUntil(this._destroyed$)
+        takeUntil(this._destroyed$),
       );
 
       this.artists$ = (
@@ -126,21 +126,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         map((artists) =>
           artists.filter((artist) => {
             artist.albums = artist.albums.filter(
-              SpotifyService.albumHadBirthdayPastWeek
+              SpotifyService.albumHadBirthdayPastWeek,
             );
             return artist.albums.length > 0;
-          })
+          }),
         ),
-        takeUntil(this._destroyed$)
+        takeUntil(this._destroyed$),
       );
 
-      doneLoading$
-        .pipe(takeUntil(this._destroyed$), take(1))
-        .subscribe(() => {
-          this.loading = false;
-          // Try to init observer after data load (sections become visible)
-          this.initObserverIfReady();
-        });
+      doneLoading$.pipe(takeUntil(this._destroyed$), take(1)).subscribe(() => {
+        this.loading = false;
+        // Try to init observer after data load (sections become visible)
+        this.initObserverIfReady();
+      });
     }
   }
 
@@ -189,7 +187,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         root: null,
         rootMargin: '-64px 0px -40% 0px',
         threshold: 0.01,
-      }
+      },
     );
     this.sectionObserver.observe(this.yearSection.nativeElement);
     this.observerInitialized = true;
@@ -237,9 +235,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   async login() {
     // Generate PKCE parameters
     const codeVerifier = this.pkceService.generateCodeVerifier();
-    const codeChallenge = await this.pkceService.generateCodeChallenge(
-      codeVerifier
-    );
+    const codeChallenge =
+      await this.pkceService.generateCodeChallenge(codeVerifier);
 
     // Store code verifier for later use during token exchange
     this.pkceService.storeCodeVerifier(codeVerifier);

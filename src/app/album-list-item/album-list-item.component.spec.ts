@@ -69,7 +69,7 @@ describe('AlbumListItemComponent', () => {
           name: "Artist's Greatest Hits & More",
         };
         expect(component.altTag).toBe(
-          "Album cover for Artist's Greatest Hits & More"
+          "Album cover for Artist's Greatest Hits & More",
         );
       });
 
@@ -132,14 +132,14 @@ describe('AlbumListItemComponent', () => {
     it('should render release date in subtitle', () => {
       const subtitleElement = debugElement.query(By.css('[matListItemLine]'));
       expect(subtitleElement.nativeElement.textContent.trim()).toBe(
-        '2023-01-15'
+        '2023-01-15',
       );
     });
 
     it('should render album cover image with correct src', () => {
       const imageElement = debugElement.query(By.css('img[matListItemAvatar]'));
       expect(imageElement.nativeElement.src).toBe(
-        'https://example.com/small.jpg'
+        'https://example.com/small.jpg',
       );
     });
 
@@ -151,7 +151,7 @@ describe('AlbumListItemComponent', () => {
     it('should render external link with correct href', () => {
       const linkElement = debugElement.query(By.css('a[mat-list-item]'));
       expect(linkElement.nativeElement.href).toBe(
-        'https://open.spotify.com/album/test'
+        'https://open.spotify.com/album/test',
       );
     });
 
@@ -163,7 +163,7 @@ describe('AlbumListItemComponent', () => {
     it('should have avatar class on image', () => {
       const imageElement = debugElement.query(By.css('img'));
       expect(imageElement.nativeElement.classList.contains('avatar')).toBe(
-        true
+        true,
       );
     });
   });
@@ -254,24 +254,24 @@ describe('AlbumListItemComponent', () => {
       const newDebugElement = newFixture.debugElement;
       const titleElement = newDebugElement.query(By.css('[matListItemTitle]'));
       const subtitleElement = newDebugElement.query(
-        By.css('[matListItemLine]')
+        By.css('[matListItemLine]'),
       );
       const imageElement = newDebugElement.query(
-        By.css('img[matListItemAvatar]')
+        By.css('img[matListItemAvatar]'),
       );
       const linkElement = newDebugElement.query(By.css('a[mat-list-item]'));
 
       expect(titleElement.nativeElement.textContent.trim()).toBe(
-        'New Album Name'
+        'New Album Name',
       );
       expect(subtitleElement.nativeElement.textContent.trim()).toBe(
-        '2024-05-20'
+        '2024-05-20',
       );
       expect(imageElement.nativeElement.src).toBe(
-        'https://example.com/new-small.jpg'
+        'https://example.com/new-small.jpg',
       );
       expect(linkElement.nativeElement.href).toBe(
-        'https://open.spotify.com/album/new'
+        'https://open.spotify.com/album/new',
       );
     });
 

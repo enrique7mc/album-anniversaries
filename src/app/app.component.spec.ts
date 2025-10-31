@@ -25,7 +25,12 @@ describe('AppComponent', () => {
         { provide: Functions, useValue: functionsSpy },
         PkceService,
       ],
-      declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent, ThemeSwitcherComponent],
+      declarations: [
+        AppComponent,
+        ArtistCardComponent,
+        AlbumListItemComponent,
+        ThemeSwitcherComponent,
+      ],
     }).compileComponents();
   }));
 

@@ -50,7 +50,7 @@ describe('ArtistCardComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [MaterialModule],
-      declarations: [ArtistCardComponent, AlbumListItemComponent]
+      declarations: [ArtistCardComponent, AlbumListItemComponent],
     }).compileComponents();
   }));
 
@@ -85,9 +85,9 @@ describe('ArtistCardComponent', () => {
       it('should handle artist names with special characters', () => {
         component.artist = {
           ...mockArtist,
-          name: "AC/DC & The Rolling Stones",
+          name: 'AC/DC & The Rolling Stones',
         };
-        expect(component.altTag).toBe("AC/DC & The Rolling Stones photo");
+        expect(component.altTag).toBe('AC/DC & The Rolling Stones photo');
       });
 
       it('should handle empty artist name', () => {
@@ -103,26 +103,34 @@ describe('ArtistCardComponent', () => {
 
     describe('artistImageUrl', () => {
       it('should return first (largest) image URL when available', () => {
-        expect(component.artistImageUrl).toBe('https://example.com/artist-large.jpg');
+        expect(component.artistImageUrl).toBe(
+          'https://example.com/artist-large.jpg',
+        );
       });
 
       it('should return placeholder when images array is empty', () => {
         component.artist = { ...mockArtist, images: [] };
-        expect(component.artistImageUrl).toBe('https://via.placeholder.com/600');
+        expect(component.artistImageUrl).toBe(
+          'https://via.placeholder.com/600',
+        );
       });
 
       it('should return placeholder when first image is null', () => {
         const imagesWithNull = [...mockImages];
         imagesWithNull[0] = null as any;
         component.artist = { ...mockArtist, images: imagesWithNull };
-        expect(component.artistImageUrl).toBe('https://via.placeholder.com/600');
+        expect(component.artistImageUrl).toBe(
+          'https://via.placeholder.com/600',
+        );
       });
 
       it('should return placeholder when first image is undefined', () => {
         const imagesWithUndefined = [...mockImages];
         imagesWithUndefined[0] = undefined as any;
         component.artist = { ...mockArtist, images: imagesWithUndefined };
-        expect(component.artistImageUrl).toBe('https://via.placeholder.com/600');
+        expect(component.artistImageUrl).toBe(
+          'https://via.placeholder.com/600',
+        );
       });
 
       it('should return empty string when first image has empty URL', () => {
@@ -135,7 +143,9 @@ describe('ArtistCardComponent', () => {
       it('should use only the first image, not subsequent ones', () => {
         const singleImage: Image[] = [mockImages[0]];
         component.artist = { ...mockArtist, images: singleImage };
-        expect(component.artistImageUrl).toBe('https://example.com/artist-large.jpg');
+        expect(component.artistImageUrl).toBe(
+          'https://example.com/artist-large.jpg',
+        );
       });
     });
   });
@@ -148,7 +158,9 @@ describe('ArtistCardComponent', () => {
 
     it('should render artist image with correct src', () => {
       const imageElement = debugElement.query(By.css('img[mat-card-image]'));
-      expect(imageElement.nativeElement.src).toBe('https://example.com/artist-large.jpg');
+      expect(imageElement.nativeElement.src).toBe(
+        'https://example.com/artist-large.jpg',
+      );
     });
 
     it('should render artist image with correct alt text', () => {
@@ -158,7 +170,9 @@ describe('ArtistCardComponent', () => {
 
     it('should render "View on Spotify" link with correct href', () => {
       const linkElement = debugElement.query(By.css('a[mat-raised-button]'));
-      expect(linkElement.nativeElement.href).toBe('https://open.spotify.com/artist/artist-123');
+      expect(linkElement.nativeElement.href).toBe(
+        'https://open.spotify.com/artist/artist-123',
+      );
     });
 
     it('should render "View on Spotify" link with target="_blank"', () => {
@@ -167,14 +181,22 @@ describe('ArtistCardComponent', () => {
     });
 
     it('should render all albums in the list', () => {
-      const albumElements = debugElement.queryAll(By.css('app-album-list-item'));
+      const albumElements = debugElement.queryAll(
+        By.css('app-album-list-item'),
+      );
       expect(albumElements.length).toBe(2);
     });
 
     it('should pass album data to album list item components', () => {
-      const albumComponents = debugElement.queryAll(By.directive(AlbumListItemComponent));
-      expect(albumComponents[0].componentInstance.album).toEqual(mockArtist.albums[0]);
-      expect(albumComponents[1].componentInstance.album).toEqual(mockArtist.albums[1]);
+      const albumComponents = debugElement.queryAll(
+        By.directive(AlbumListItemComponent),
+      );
+      expect(albumComponents[0].componentInstance.album).toEqual(
+        mockArtist.albums[0],
+      );
+      expect(albumComponents[1].componentInstance.album).toEqual(
+        mockArtist.albums[1],
+      );
     });
   });
 
@@ -186,16 +208,20 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = artistNoAlbums;
       newFixture.detectChanges();
 
-      const albumElements = newFixture.debugElement.queryAll(By.css('app-album-list-item'));
+      const albumElements = newFixture.debugElement.queryAll(
+        By.css('app-album-list-item'),
+      );
       expect(albumElements.length).toBe(0);
     });
 
     it('should handle artist with many albums', () => {
-      const manyAlbums = Array(15).fill(null).map((_, i) => ({
-        ...mockArtist.albums[0],
-        id: `album-${i}`,
-        name: `Album ${i}`,
-      }));
+      const manyAlbums = Array(15)
+        .fill(null)
+        .map((_, i) => ({
+          ...mockArtist.albums[0],
+          id: `album-${i}`,
+          name: `Album ${i}`,
+        }));
 
       // Create fresh fixture for OnPush change detection
       const newFixture = TestBed.createComponent(ArtistCardComponent);
@@ -203,7 +229,9 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = { ...mockArtist, albums: manyAlbums };
       newFixture.detectChanges();
 
-      const albumElements = newFixture.debugElement.queryAll(By.css('app-album-list-item'));
+      const albumElements = newFixture.debugElement.queryAll(
+        By.css('app-album-list-item'),
+      );
       expect(albumElements.length).toBe(15);
     });
 
@@ -214,7 +242,9 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = artistNoUrl;
       newFixture.detectChanges();
 
-      const linkElement = newFixture.nativeElement.querySelector('a[mat-raised-button]');
+      const linkElement = newFixture.nativeElement.querySelector(
+        'a[mat-raised-button]',
+      );
       expect(linkElement.getAttribute('href')).toBe('');
     });
 
@@ -225,7 +255,9 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = artistNoImages;
       newFixture.detectChanges();
 
-      const imageElement = newFixture.nativeElement.querySelector('img[mat-card-image]');
+      const imageElement = newFixture.nativeElement.querySelector(
+        'img[mat-card-image]',
+      );
       expect(imageElement.src).toContain('placeholder.com');
     });
   });
@@ -241,15 +273,17 @@ describe('ArtistCardComponent', () => {
           { heigth: 640, width: 640, url: 'https://example.com/new-large.jpg' },
         ],
         external_url: 'https://open.spotify.com/artist/new-artist',
-        albums: [{
-          id: 'new-album',
-          artist_id: 'new-artist',
-          name: 'New Album',
-          release_date: '2024-03-10',
-          release_date_precision: 'day',
-          images: mockImages,
-          external_url: 'https://open.spotify.com/album/new-album',
-        }],
+        albums: [
+          {
+            id: 'new-album',
+            artist_id: 'new-artist',
+            name: 'New Album',
+            release_date: '2024-03-10',
+            release_date_precision: 'day',
+            images: mockImages,
+            external_url: 'https://open.spotify.com/album/new-album',
+          },
+        ],
       };
 
       const newFixture = TestBed.createComponent(ArtistCardComponent);
@@ -261,11 +295,19 @@ describe('ArtistCardComponent', () => {
       const titleElement = newDebugElement.query(By.css('mat-card-title'));
       const imageElement = newDebugElement.query(By.css('img[mat-card-image]'));
       const linkElement = newDebugElement.query(By.css('a[mat-raised-button]'));
-      const albumElements = newDebugElement.queryAll(By.css('app-album-list-item'));
+      const albumElements = newDebugElement.queryAll(
+        By.css('app-album-list-item'),
+      );
 
-      expect(titleElement.nativeElement.textContent.trim()).toBe('New Artist Name');
-      expect(imageElement.nativeElement.src).toBe('https://example.com/new-large.jpg');
-      expect(linkElement.nativeElement.href).toBe('https://open.spotify.com/artist/new-artist');
+      expect(titleElement.nativeElement.textContent.trim()).toBe(
+        'New Artist Name',
+      );
+      expect(imageElement.nativeElement.src).toBe(
+        'https://example.com/new-large.jpg',
+      );
+      expect(linkElement.nativeElement.href).toBe(
+        'https://open.spotify.com/artist/new-artist',
+      );
       expect(albumElements.length).toBe(1);
     });
 

@@ -17,5 +17,5 @@ export {
   scope,
   stateKey,
   accessTokenKey,
-  tokenExpiryKey
+  tokenExpiryKey,
 };

@@ -26,7 +26,7 @@ const createAlbum = (releaseDate: string): Album => ({
   release_date: releaseDate,
   release_date_precision: 'day',
   images: [],
-  external_url: 'https://open.spotify.com/album/test'
+  external_url: 'https://open.spotify.com/album/test',
 });
 
 describe('SpotifyService', () => {
@@ -35,7 +35,7 @@ describe('SpotifyService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientModule],
-      providers: [{ provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG }]
+      providers: [{ provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG }],
     });
     service = TestBed.inject(SpotifyService);
   });
@@ -136,7 +136,9 @@ describe('SpotifyService', () => {
       const album = createAlbum('2020-01-15');
 
       // This should not throw an error
-      expect(() => SpotifyService.albumHadBirthdayPastWeek(album)).not.toThrow();
+      expect(() =>
+        SpotifyService.albumHadBirthdayPastWeek(album),
+      ).not.toThrow();
     });
 
     it('should handle leap year dates correctly', () => {
@@ -144,7 +146,9 @@ describe('SpotifyService', () => {
       const album = createAlbum('2020-02-29');
 
       // Should not throw an error even in non-leap years
-      expect(() => SpotifyService.albumHadBirthdayPastWeek(album)).not.toThrow();
+      expect(() =>
+        SpotifyService.albumHadBirthdayPastWeek(album),
+      ).not.toThrow();
     });
   });
 
@@ -247,11 +251,15 @@ describe('SpotifyService', () => {
     it('should handle dates at year boundaries', () => {
       // Test December 31st
       const endOfYear = createAlbum('2023-12-31');
-      expect(() => SpotifyService.albumReleasedPastYear(endOfYear)).not.toThrow();
+      expect(() =>
+        SpotifyService.albumReleasedPastYear(endOfYear),
+      ).not.toThrow();
 
       // Test January 1st
       const startOfYear = createAlbum('2024-01-01');
-      expect(() => SpotifyService.albumReleasedPastYear(startOfYear)).not.toThrow();
+      expect(() =>
+        SpotifyService.albumReleasedPastYear(startOfYear),
+      ).not.toThrow();
     });
   });
 });

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PkceService {
   private readonly CODE_VERIFIER_KEY = 'spotify_code_verifier';
@@ -14,7 +14,8 @@ export class PkceService {
    * @returns Random code verifier string
    */
   generateCodeVerifier(length: number = 128): string {
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const possible =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     const values = crypto.getRandomValues(new Uint8Array(length));
     return Array.from(values)
       .map((x) => possible[x % possible.length])
@@ -30,7 +31,7 @@ export class PkceService {
     if (!crypto.subtle) {
       throw new Error(
         'Web Crypto API is not available. Please use HTTPS (e.g., npm run start:https) for secure context. ' +
-        'Safari requires HTTPS for crypto.subtle, even on local development.'
+          'Safari requires HTTPS for crypto.subtle, even on local development.',
       );
     }
     const encoder = new TextEncoder();
@@ -46,10 +47,7 @@ export class PkceService {
    */
   private base64UrlEncode(buffer: ArrayBuffer): string {
     const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-    return base64
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=/g, '');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   }
 
   /**

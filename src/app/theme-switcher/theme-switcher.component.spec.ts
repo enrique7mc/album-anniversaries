@@ -10,11 +10,10 @@ describe('ThemeSwitcherComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ThemeSwitcherComponent ],
-      imports: [ MaterialModule ],
-      providers: [ ThemeService ]
-    })
-    .compileComponents();
+      declarations: [ThemeSwitcherComponent],
+      imports: [MaterialModule],
+      providers: [ThemeService],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ThemeSwitcherComponent);
     component = fixture.componentInstance;

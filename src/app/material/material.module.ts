@@ -19,7 +19,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     MatMenuModule,
     MatProgressBarModule,
     MatSnackBarModule,
-    MatToolbarModule
+    MatToolbarModule,
   ],
   exports: [
     MatButtonModule,
@@ -30,7 +30,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     MatMenuModule,
     MatProgressBarModule,
     MatSnackBarModule,
-    MatToolbarModule
-  ]
+    MatToolbarModule,
+  ],
 })
 export class MaterialModule {}
