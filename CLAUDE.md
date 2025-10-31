@@ -180,5 +180,37 @@ it('should handle null name', () => {
 - Asset optimization for production builds
 - Firebase hosting deployment pipeline
 
+### Mobile Testing (iPhone/iPad)
+
+The development server is configured with `--host 0.0.0.0` to allow network access from other devices.
+
+#### Finding Your Mac's Local IP Address
+```bash
+# Get local IP address on macOS
+ipconfig getifaddr en0
+```
+
+This will return your local IP (e.g., `192.168.1.100`). Use this IP to access the dev server from your iPhone.
+
+#### Connecting from iPhone
+1. Ensure iPhone and Mac are on the same WiFi network
+2. Add your local IP redirect URI to Spotify Developer Dashboard:
+   - Example: `http://192.168.1.100:4200`
+3. Start the dev server: `npm start`
+4. On iPhone Safari, navigate to: `http://192.168.1.100:4200` (use your actual IP)
+
+#### Remote Debugging from Safari on Mac
+To debug the iPhone app from Safari on your Mac:
+
+1. **On iPhone**:
+   - Settings → Safari → Advanced → Enable "Web Inspector"
+
+2. **On Mac**:
+   - Safari → Preferences → Advanced → Enable "Show Develop menu in menu bar"
+   - Develop menu → [Your iPhone Name] → Select the page to debug
+   - Safari Web Inspector will open with full debugging capabilities
+
+**Note**: iPhone must be connected via USB cable or same WiFi network for remote debugging.
+
 ### Best Practices
 - Always run tests before committing changes (`npm test -- --no-watch`)
