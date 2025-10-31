@@ -190,6 +190,10 @@ h1 {
   .sticky-nav {
     gap: 6px;
 
+    .header-icon {
+      display: none;
+    }
+
     .title {
       font-size: 16px;
     }
