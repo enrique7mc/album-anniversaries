@@ -185,6 +185,32 @@ h1 {
   }
 }
 
+// Responsive tweaks for small screens
+@media only screen and (max-width: 599px) {
+  .sticky-nav {
+    gap: 6px;
+
+    .title {
+      font-size: 16px;
+    }
+
+    .header-chips {
+      margin-right: 2px;
+
+      mat-chip {
+        font-size: 12px !important;
+        padding: 0 8px !important;
+        height: 28px !important;
+        line-height: 28px !important;
+        max-width: 96px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
 // Theme-specific styles
 .light-theme {
   .login-container {

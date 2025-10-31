@@ -3,7 +3,7 @@
   <span class="title">{{ title }}</span>
   <span class="spacer"></span>
   <mat-chip-set *ngIf="accessToken" class="header-chips">
-    <mat-chip>This Week</mat-chip>
+    <mat-chip>{{ currentFilterLabel }}</mat-chip>
   </mat-chip-set>
   <app-theme-switcher></app-theme-switcher>
   <button
@@ -22,17 +22,17 @@
   mode="indeterminate"
 ></mat-progress-bar>
 <div class="container" *ngIf="!loading && accessToken">
-  <h1>These albums were released this week in the past!</h1>
+  <h1 #weekSection>These albums were released this week in the past!</h1>
   <div class="artist-list">
     <app-artist-card
-      *ngFor="let artist of (artists$ | async)"
+      *ngFor="let artist of artists$ | async"
       [artist]="artist"
     ></app-artist-card>
   </div>
-  <h1>Albums released last year</h1>
+  <h1 #yearSection>Albums released last year</h1>
   <div class="artist-list">
     <app-artist-card
-      *ngFor="let artist of (artistsWithRecentAlbums$ | async)"
+      *ngFor="let artist of artistsWithRecentAlbums$ | async"
       [artist]="artist"
     ></app-artist-card>
   </div>
@@ -42,10 +42,16 @@
     <mat-card-header>
       <mat-icon mat-card-avatar>music_note</mat-icon>
       <mat-card-title>Connect to Spotify</mat-card-title>
-      <mat-card-subtitle>Discover album anniversaries from your favorite artists</mat-card-subtitle>
+      <mat-card-subtitle
+        >Discover album anniversaries from your favorite
+        artists</mat-card-subtitle
+      >
     </mat-card-header>
     <mat-card-content>
-      <p>Sign in to see which albums from your favorite artists were released this week in previous years.</p>
+      <p>
+        Sign in to see which albums from your favorite artists were released
+        this week in previous years.
+      </p>
     </mat-card-content>
     <mat-card-actions align="center">
       <button
