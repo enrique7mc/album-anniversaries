@@ -13,7 +13,10 @@
     "deploy": "firebase deploy",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "format": "prettier --write \"src/**/*.{ts,html,scss,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,css,json}\"",
+    "prepare": "husky"
   },
   "private": true,
   "dependencies": {
@@ -43,6 +46,7 @@
     "@types/jasmine": "~4.3.0",
     "@types/node": "^20.0.0",
     "firebase-tools": "^13.35.1",
+    "husky": "^9.1.7",
     "jasmine-core": "~4.5.0",
     "jasmine-spec-reporter": "~7.0.0",
     "karma": "~6.4.0",
@@ -50,7 +54,14 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "^2.0.0",
+    "lint-staged": "^16.2.6",
+    "prettier": "^3.6.2",
     "ts-node": "~10.9.1",
     "typescript": "~5.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,html,scss,css,json}": [
+      "prettier --write"
+    ]
   }
 }
