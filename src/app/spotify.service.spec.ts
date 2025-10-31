@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { SpotifyService } from './spotify.service';
 import { Album } from './album';
@@ -32,16 +33,114 @@ const createAlbum = (releaseDate: string): Album => ({
 describe('SpotifyService', () => {
   let service: SpotifyService;
 
+  let httpMock: HttpTestingController;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientModule],
-      providers: [{ provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG }],
+      imports: [HttpClientTestingModule],
+      providers: [{ provide: APP_CONFIG, useValue: { ...SPOTIFY_APP_CONFIG, isDev: true } }],
     });
     service = TestBed.inject(SpotifyService);
+    httpMock = TestBed.inject(HttpTestingController);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  describe('dev-only caching (getWithCache)', () => {
+    const testUrl = 'https://example.com/test';
+
+    afterEach(() => {
+      httpMock.verify();
+    });
+
+    beforeEach(() => {
+      jasmine.clock().install();
+    });
+
+    afterEach(() => {
+      jasmine.clock().uninstall();
+    });
+
+    it('should cache GET responses for 5 minutes in dev', (done) => {
+      const first$ = (service as any).getWithCache(testUrl, {}, false);
+      first$.subscribe((data: any) => {
+        expect(data).toEqual({ items: [1] });
+
+        const second$ = (service as any).getWithCache(testUrl, {}, false);
+        second$.subscribe((cached: any) => {
+          expect(cached).toEqual({ items: [1] });
+          httpMock.expectNone(testUrl);
+          done();
+        });
+      });
+
+      const req1 = httpMock.expectOne(testUrl);
+      expect(req1.request.method).toBe('GET');
+      req1.flush({ items: [1] });
+    });
+
+    it('should bypass cache when bypass flag is true', (done) => {
+      const first$ = (service as any).getWithCache(testUrl, {}, false);
+      first$.subscribe(() => {
+        const bypass$ = (service as any).getWithCache(testUrl, {}, true);
+        bypass$.subscribe((data: any) => {
+          expect(data).toEqual({ items: [2] });
+          done();
+        });
+
+        const req2 = httpMock.expectOne(testUrl);
+        expect(req2.request.method).toBe('GET');
+        req2.flush({ items: [2] });
+      });
+
+      const req1 = httpMock.expectOne(testUrl);
+      expect(req1.request.method).toBe('GET');
+      req1.flush({ items: [1] });
+    });
+
+    it('should not cache in production mode (isDev=false)', (done) => {
+      const http = TestBed.inject(HttpClient);
+      const prodService = new SpotifyService(http, { title: '', redirectUrl: '', isDev: false } as any);
+
+      const first$ = (prodService as any).getWithCache(testUrl, {}, false);
+      first$.subscribe(() => {
+        const second$ = (prodService as any).getWithCache(testUrl, {}, false);
+        second$.subscribe(() => {
+          done();
+        });
+
+        const req2 = httpMock.expectOne(testUrl);
+        expect(req2.request.method).toBe('GET');
+        req2.flush({ items: [2] });
+      });
+
+      const req1 = httpMock.expectOne(testUrl);
+      expect(req1.request.method).toBe('GET');
+      req1.flush({ items: [1] });
+    });
+
+    it('should expire cache after 5 minutes TTL', (done) => {
+      const first$ = (service as any).getWithCache(testUrl, {}, false);
+      first$.subscribe(() => {
+        // advance time beyond 5 minutes TTL
+        jasmine.clock().tick(5 * 60 * 1000 + 1);
+
+        const second$ = (service as any).getWithCache(testUrl, {}, false);
+        second$.subscribe(() => {
+          done();
+        });
+
+        const req2 = httpMock.expectOne(testUrl);
+        expect(req2.request.method).toBe('GET');
+        req2.flush({ items: [2] });
+      });
+
+      const req1 = httpMock.expectOne(testUrl);
+      expect(req1.request.method).toBe('GET');
+      req1.flush({ items: [1] });
+    });
   });
 
   describe('albumHadBirthdayPastWeek', () => {

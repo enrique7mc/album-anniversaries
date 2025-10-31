@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, Subject, from, forkJoin } from 'rxjs';
-import { mergeMap, map, filter, tap, bufferCount } from 'rxjs/operators';
+import { Observable, BehaviorSubject, Subject, from, forkJoin, of } from 'rxjs';
+import { mergeMap, map, filter, tap, bufferCount, shareReplay, finalize } from 'rxjs/operators';
 import { albumsLocalUrl, artistsLocalUrl } from './constants';
 import { Artist } from './artist';
 import { Album } from './album';
@@ -16,6 +16,9 @@ export class SpotifyService {
   private dataStore: {
     artists: Artist[];
   };
+  private responseCache = new Map<string, { timestamp: number; value: any }>();
+  private inflight = new Map<string, Observable<any>>();
+  private readonly cacheTtlMs = 5 * 60 * 1000; // 5 minutes
 
   constructor(
     private http: HttpClient,
@@ -41,7 +44,7 @@ export class SpotifyService {
   }
 
   // TODO: figure out the optimal way to signal this method is done loading.
-  loadArtistsWithAlbums(accessToken: string): Observable<boolean> {
+  loadArtistsWithAlbums(accessToken: string, bypassCache = false): Observable<boolean> {
     const httpOptions = {
       headers: new HttpHeaders({
         Authorization: `Bearer ${accessToken}`,
@@ -52,7 +55,7 @@ export class SpotifyService {
 
     // TODO: try to compose the artist and albums observables instead of
     // handling a nested subscription.
-    this.http.get(this.artistsUrl, httpOptions).subscribe(
+    this.getWithCache<any>(this.artistsUrl, httpOptions, bypassCache).subscribe(
       (data: any) => {
         let artistsResponse = data.items;
 
@@ -74,7 +77,7 @@ export class SpotifyService {
 
         const artistAlbumRequests: Observable<any> = from(artists).pipe(
           mergeMap((artist) =>
-            this.http.get(this.artistUrl(artist.id), httpOptions).pipe(
+            this.getWithCache<any>(this.artistUrl(artist.id), httpOptions, bypassCache).pipe(
               map((data: any) => {
                 // TODO: extract this into its own function
                 const albums: Album[] = data.items
@@ -131,6 +134,47 @@ export class SpotifyService {
     );
 
     return done$.asObservable();
+  }
+
+  clearCache(): void {
+    this.responseCache.clear();
+    this.inflight.clear();
+  }
+
+  private getWithCache<T>(url: string, options: { headers?: HttpHeaders }, bypass = false): Observable<T> {
+    // In production or when explicitly bypassing, skip cache entirely
+    if (!this.isDev || bypass) {
+      const httpOptions: { headers?: HttpHeaders; observe: 'body' } = { ...(options || {}), observe: 'body' };
+      console.debug('[SpotifyService] cache BYPASS', url);
+      return this.http.get<T>(url, httpOptions);
+    }
+
+    const now = Date.now();
+    const cached = this.responseCache.get(url);
+    if (cached && now - cached.timestamp < this.cacheTtlMs) {
+      console.debug('[SpotifyService] cache HIT', url, 'ageMs', now - cached.timestamp);
+      return of(cached.value as T);
+    }
+
+    const inflightExisting = this.inflight.get(url);
+    if (inflightExisting) {
+      return inflightExisting as Observable<T>;
+    }
+
+    const httpOptions: { headers?: HttpHeaders; observe: 'body' } = { ...(options || {}), observe: 'body' };
+    console.debug('[SpotifyService] network GET', url);
+    const request$ = this.http.get<T>(url, httpOptions).pipe(
+      tap((value) => {
+        this.responseCache.set(url, { timestamp: Date.now(), value });
+      }),
+      shareReplay(1),
+      finalize(() => {
+        this.inflight.delete(url);
+      }),
+    );
+
+    this.inflight.set(url, request$ as Observable<any>);
+    return request$;
   }
 
   // TODO: refactor this to make more generic
