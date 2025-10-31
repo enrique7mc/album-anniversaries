@@ -27,6 +27,91 @@ The project uses Angular Material for UI components and Firebase for hosting and
 - `npm run predeploy` - Build project before deployment
 - `npm run deploy` - Deploy to Firebase hosting
 
+### Code Formatting
+- `npm run format` - Auto-format all source files with Prettier
+- `npm run format:check` - Check code formatting without modifying files
+- `npm run prepare` - Initialize Husky git hooks (runs automatically on npm install)
+
+## Code Formatting & Git Hooks
+
+This project uses **Prettier**, **Husky**, and **lint-staged** to ensure consistent code formatting and quality.
+
+### Automatic Formatting on Commit
+
+Code is automatically formatted when you commit:
+
+```bash
+git add src/app/app.component.ts
+git commit -m "Add feature"
+# → Prettier auto-formats staged files
+# → Commit succeeds (fast!)
+```
+
+**What gets formatted:**
+- `*.ts` - TypeScript files
+- `*.html` - HTML templates
+- `*.scss` - Stylesheets
+- `*.css` - CSS files
+- `*.json` - JSON configuration files
+
+### Automatic Testing on Push
+
+Tests run automatically before pushing to prevent broken code from reaching the remote:
+
+```bash
+git push
+# → Runs all 108 tests with coverage
+# → If tests pass: pushes to remote ✅
+# → If tests fail: blocks push ❌
+```
+
+### Git Hooks Configuration
+
+#### Pre-Commit Hook (`.husky/pre-commit`)
+- **Trigger**: `git commit`
+- **Action**: Runs `npx lint-staged`
+- **Purpose**: Auto-formats only staged files (fast)
+- **Files**: Configured in `package.json` under `lint-staged`
+
+#### Pre-Push Hook (`.husky/pre-push`)
+- **Trigger**: `git push`
+- **Action**: Runs `npm test -- --no-watch --code-coverage`
+- **Purpose**: Ensures all tests pass before pushing
+- **Result**: Prevents pushing untested/broken code
+
+### Prettier Configuration (`.prettierrc`)
+
+```json
+{
+  "singleQuote": true,
+  "useTabs": false,
+  "tabWidth": 2,
+  "semi": true,
+  "bracketSpacing": true
+}
+```
+
+### Benefits
+
+- ✅ **Consistent formatting** - All code follows the same style
+- ✅ **No manual formatting** - Happens automatically on commit
+- ✅ **Fast commits** - Only formats staged files
+- ✅ **Safe pushes** - Tests must pass before push
+- ✅ **Team productivity** - No debates about code style
+- ✅ **Quality assurance** - Broken code can't reach remote
+
+### Manual Formatting
+
+To manually format all files in the project:
+
+```bash
+# Format all source files
+npm run format
+
+# Check formatting without modifying (useful for CI)
+npm run format:check
+```
+
 ## Architecture
 
 ### Key Components Structure
@@ -213,4 +298,10 @@ To debug the iPhone app from Safari on your Mac:
 **Note**: iPhone must be connected via USB cable or same WiFi network for remote debugging.
 
 ### Best Practices
-- Always run tests before committing changes (`npm test -- --no-watch`)
+- **Code formatting**: Happens automatically on commit via pre-commit hook
+- **Testing**: Tests run automatically before push via pre-push hook
+  - All 108 tests must pass before code can be pushed to remote
+  - Manual test runs: `npm test` (watch mode) or `npm test -- --no-watch` (single run)
+- **Commits**: Keep commits focused and atomic
+- **Commit messages**: Use clear, descriptive messages following conventional commits style
+- **Pre-push**: Ensure all tests pass - the pre-push hook will block if tests fail
