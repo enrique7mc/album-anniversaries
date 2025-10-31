@@ -67,6 +67,9 @@ Thumbs.db
 # Environment files
 /.env
 
+# SSL certificates for local development
+/ssl/
+
 # Angular CLI and build artefacts
 /.angular-cli.json
 /.ng/
