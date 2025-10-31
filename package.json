@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0",
+    "start:https": "ng serve --host 0.0.0.0 --ssl --ssl-cert ssl/localhost.crt --ssl-key ssl/localhost.key",
     "server:all": "concurrently \"npm run server\" \"ng serve\"",
     "server": "json-server server/db.json",
     "server:auth": "node server/server.js",

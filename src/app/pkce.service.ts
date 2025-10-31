@@ -27,6 +27,12 @@ export class PkceService {
    * @returns Promise resolving to the base64url encoded code challenge
    */
   async generateCodeChallenge(codeVerifier: string): Promise<string> {
+    if (!crypto.subtle) {
+      throw new Error(
+        'Web Crypto API is not available. Please use HTTPS (e.g., npm run start:https) for secure context. ' +
+        'Safari requires HTTPS for crypto.subtle, even on local development.'
+      );
+    }
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
     const digest = await crypto.subtle.digest('SHA-256', data);
