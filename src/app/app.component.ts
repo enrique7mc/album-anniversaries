@@ -109,32 +109,30 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.spotifyService.artists as Observable<Artist[]>
       ).pipe(
         map((artists) => artists.map((a) => Object.assign({}, a))),
-        map(
-          (artists) =>
-            artists.filter((artist) => {
-              artist.albums = artist.albums.filter(
-                SpotifyService.albumReleasedPastYear
-              );
-              return artist.albums.length > 0;
-            }),
-          takeUntil(this._destroyed$)
-        )
+        map((artists) =>
+          artists.filter((artist) => {
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumReleasedPastYear
+            );
+            return artist.albums.length > 0;
+          })
+        ),
+        takeUntil(this._destroyed$)
       );
 
       this.artists$ = (
         this.spotifyService.artists as Observable<Artist[]>
       ).pipe(
         map((artists) => artists.map((a) => Object.assign({}, a))),
-        map(
-          (artists) =>
-            artists.filter((artist) => {
-              artist.albums = artist.albums.filter(
-                SpotifyService.albumHadBirthdayPastWeek
-              );
-              return artist.albums.length > 0;
-            }),
-          takeUntil(this._destroyed$)
-        )
+        map((artists) =>
+          artists.filter((artist) => {
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumHadBirthdayPastWeek
+            );
+            return artist.albums.length > 0;
+          })
+        ),
+        takeUntil(this._destroyed$)
       );
 
       doneLoading$
@@ -158,9 +156,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     if (!this.yearSection || !this.yearSection.nativeElement) {
+      if (!this.accessToken || this.loading) {
+        console.debug('[ChipScroll] yearSection not ready; waiting for data/render.');
+        return;
+      }
       console.debug('[ChipScroll] yearSection not yet available. Will retry.');
       // Defer and try again on next tick
-      setTimeout(() => this.initObserverIfReady());
+      setTimeout(() => this.initObserverIfReady(), 100);
       return;
     }
     console.debug(
