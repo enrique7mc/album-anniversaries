@@ -73,7 +73,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngOnInit() {
-    console.debug('[ChipScroll] ngOnInit start');
     this.initializeTheme();
     // First, check if there's a valid stored token
     const storedToken = this.getStoredToken();
@@ -139,7 +138,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         .pipe(takeUntil(this._destroyed$), take(1))
         .subscribe(() => {
           this.loading = false;
-          console.debug('[ChipScroll] Data loaded, loading=false');
           // Try to init observer after data load (sections become visible)
           this.initObserverIfReady();
         });
@@ -147,7 +145,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    console.debug('[ChipScroll] ngAfterViewInit called');
     this.initObserverIfReady();
   }
 
@@ -157,20 +154,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (!this.yearSection || !this.yearSection.nativeElement) {
       if (!this.accessToken || this.loading) {
-        console.debug('[ChipScroll] yearSection not ready; waiting for data/render.');
         return;
       }
-      console.debug('[ChipScroll] yearSection not yet available. Will retry.');
       // Defer and try again on next tick
       setTimeout(() => this.initObserverIfReady(), 100);
       return;
     }
-    console.debug(
-      '[ChipScroll] yearSection found:',
-      this.yearSection.nativeElement?.tagName,
-      'text=',
-      this.yearSection.nativeElement?.textContent?.trim()
-    );
     this.sectionObserver = new IntersectionObserver(
       (entries) => {
         // Ensure UI updates run inside Angular zone
@@ -182,24 +171,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
               const top = entry.boundingClientRect.top;
               const passedTop = top <= rootTop + toolbarOffset;
 
-              console.debug('[ChipScroll] IO callback:', {
-                isIntersecting: entry.isIntersecting,
-                intersectionRatio: entry.intersectionRatio,
-                boundingTop: top,
-                rootBoundsTop: rootTop,
-                toolbarOffset,
-                passedTop
-              });
-
               if (passedTop) {
                 if (this.currentFilterLabel !== 'Last Year') {
                   this.currentFilterLabel = 'Last Year';
-                  console.debug('[ChipScroll] Label set to: Last Year');
                 }
               } else {
                 if (this.currentFilterLabel !== 'This Week') {
                   this.currentFilterLabel = 'This Week';
-                  console.debug('[ChipScroll] Label set to: This Week');
                 }
               }
             }
@@ -213,19 +191,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         threshold: 0.01,
       }
     );
-    console.debug('[ChipScroll] Observer created with options:', {
-      root: null,
-      rootMargin: '-64px 0px -40% 0px',
-      threshold: 0.01,
-    });
     this.sectionObserver.observe(this.yearSection.nativeElement);
     this.observerInitialized = true;
-    console.debug('[ChipScroll] Observing yearSection header...');
   }
 
   ngOnDestroy() {
     if (this.sectionObserver) {
-      console.debug('[ChipScroll] Disconnecting observer');
       this.sectionObserver.disconnect();
     }
     this._destroyed$.next();
