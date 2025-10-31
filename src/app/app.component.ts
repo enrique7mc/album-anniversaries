@@ -1,7 +1,24 @@
-import { Component, OnInit, OnDestroy, ViewEncapsulation, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewEncapsulation,
+  inject,
+  AfterViewInit,
+  ElementRef,
+  ViewChild,
+  NgZone,
+} from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { client_id, redirect_uri, scope, stateKey, accessTokenKey, tokenExpiryKey } from './constants';
+import {
+  client_id,
+  redirect_uri,
+  scope,
+  stateKey,
+  accessTokenKey,
+  tokenExpiryKey,
+} from './constants';
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
 import { Observable } from 'rxjs';
@@ -18,9 +35,9 @@ import { ThemeService } from './theme.service';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   title: string;
   accessToken: string;
   showAlbumBirthdayList: boolean = false;
@@ -28,6 +45,18 @@ export class AppComponent implements OnInit, OnDestroy {
   artistsWithRecentAlbums$: Observable<Artist[]>;
   artistsSubscription: Subscription;
   loading: boolean = false;
+
+  // UI state for the header chip
+  currentFilterLabel: string = 'This Week';
+
+  // Section anchors (inside *ngIf, so static must be false)
+  @ViewChild('weekSection', { static: false })
+  weekSection: ElementRef<HTMLElement>;
+  @ViewChild('yearSection', { static: false })
+  yearSection: ElementRef<HTMLElement>;
+
+  private sectionObserver?: IntersectionObserver;
+  private observerInitialized: boolean = false;
 
   _destroyed$ = new Subject<void>();
   private fn: Functions = inject(Functions);
@@ -37,6 +66,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private pkceService: PkceService,
     private http: HttpClient,
     private themeService: ThemeService,
+    private ngZone: NgZone,
     @Inject(APP_CONFIG) private config: AppConfig
   ) {
     this.title = config.title;
@@ -74,44 +104,101 @@ export class AppComponent implements OnInit, OnDestroy {
       );
 
       // TODO(me): figure out a better way to do the subscription logic.
-      this.artistsWithRecentAlbums$ = (this.spotifyService.artists as Observable<Artist[]>).pipe(
-        map(artists => artists.map(a => Object.assign({}, a))),
-        map(
-          artists =>
-            artists.filter(artist => {
-              artist.albums = artist.albums.filter(
-                SpotifyService.albumReleasedPastYear
-              );
-              return artist.albums.length > 0;
-            }),
-          takeUntil(this._destroyed$)
-        )
+      this.artistsWithRecentAlbums$ = (
+        this.spotifyService.artists as Observable<Artist[]>
+      ).pipe(
+        map((artists) => artists.map((a) => Object.assign({}, a))),
+        map((artists) =>
+          artists.filter((artist) => {
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumReleasedPastYear
+            );
+            return artist.albums.length > 0;
+          })
+        ),
+        takeUntil(this._destroyed$)
       );
 
-      this.artists$ = (this.spotifyService.artists as Observable<Artist[]>).pipe(
-        map(artists => artists.map(a => Object.assign({}, a))),
-        map(
-          artists =>
-            artists.filter(artist => {
-              artist.albums = artist.albums.filter(
-                SpotifyService.albumHadBirthdayPastWeek
-              );
-              return artist.albums.length > 0;
-            }),
-          takeUntil(this._destroyed$)
-        )
+      this.artists$ = (
+        this.spotifyService.artists as Observable<Artist[]>
+      ).pipe(
+        map((artists) => artists.map((a) => Object.assign({}, a))),
+        map((artists) =>
+          artists.filter((artist) => {
+            artist.albums = artist.albums.filter(
+              SpotifyService.albumHadBirthdayPastWeek
+            );
+            return artist.albums.length > 0;
+          })
+        ),
+        takeUntil(this._destroyed$)
       );
 
       doneLoading$
-        .pipe(
-          takeUntil(this._destroyed$),
-          take(1)
-        )
-        .subscribe(() => (this.loading = false));
+        .pipe(takeUntil(this._destroyed$), take(1))
+        .subscribe(() => {
+          this.loading = false;
+          // Try to init observer after data load (sections become visible)
+          this.initObserverIfReady();
+        });
     }
   }
 
+  ngAfterViewInit(): void {
+    this.initObserverIfReady();
+  }
+
+  private initObserverIfReady(): void {
+    if (this.observerInitialized) {
+      return;
+    }
+    if (!this.yearSection || !this.yearSection.nativeElement) {
+      if (!this.accessToken || this.loading) {
+        return;
+      }
+      // Defer and try again on next tick
+      setTimeout(() => this.initObserverIfReady(), 100);
+      return;
+    }
+    this.sectionObserver = new IntersectionObserver(
+      (entries) => {
+        // Ensure UI updates run inside Angular zone
+        this.ngZone.run(() => {
+          for (const entry of entries) {
+            if (entry.target === this.yearSection.nativeElement) {
+              const toolbarOffset = 64; // sticky toolbar height
+              const rootTop = entry.rootBounds ? entry.rootBounds.top : 0;
+              const top = entry.boundingClientRect.top;
+              const passedTop = top <= rootTop + toolbarOffset;
+
+              if (passedTop) {
+                if (this.currentFilterLabel !== 'Last Year') {
+                  this.currentFilterLabel = 'Last Year';
+                }
+              } else {
+                if (this.currentFilterLabel !== 'This Week') {
+                  this.currentFilterLabel = 'This Week';
+                }
+              }
+            }
+          }
+        });
+      },
+      {
+        // Account for sticky toolbar height and avoid flipping too early
+        root: null,
+        rootMargin: '-64px 0px -40% 0px',
+        threshold: 0.01,
+      }
+    );
+    this.sectionObserver.observe(this.yearSection.nativeElement);
+    this.observerInitialized = true;
+  }
+
   ngOnDestroy() {
+    if (this.sectionObserver) {
+      this.sectionObserver.disconnect();
+    }
     this._destroyed$.next();
     this._destroyed$.complete();
   }
@@ -128,7 +215,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Error if we have a code or token but state doesn't match
     const code = this.getCode();
-    return (this.accessToken || code) && (state == null || state !== storedState);
+    return (
+      (this.accessToken || code) && (state == null || state !== storedState)
+    );
   }
 
   getCode(): string | null {
@@ -137,7 +226,8 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   generateRandomString(length: number): string {
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const possible =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const values = crypto.getRandomValues(new Uint8Array(length));
     return Array.from(values)
       .map((x) => possible[x % possible.length])
@@ -147,7 +237,9 @@ export class AppComponent implements OnInit, OnDestroy {
   async login() {
     // Generate PKCE parameters
     const codeVerifier = this.pkceService.generateCodeVerifier();
-    const codeChallenge = await this.pkceService.generateCodeChallenge(codeVerifier);
+    const codeChallenge = await this.pkceService.generateCodeChallenge(
+      codeVerifier
+    );
 
     // Store code verifier for later use during token exchange
     this.pkceService.storeCodeVerifier(codeVerifier);
@@ -158,7 +250,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     // Build authorization URL with PKCE
     let url = 'https://accounts.spotify.com/authorize';
-    url += '?response_type=code';  // Changed from 'token' to 'code' for PKCE
+    url += '?response_type=code'; // Changed from 'token' to 'code' for PKCE
     url += `&client_id=${encodeURIComponent(client_id)}`;
     url += `&scope=${encodeURIComponent(scope)}`;
     url += `&redirect_uri=${encodeURIComponent(this.config.redirectUrl)}`;
@@ -234,19 +326,19 @@ export class AppComponent implements OnInit, OnDestroy {
       code: code,
       redirect_uri: this.config.redirectUrl,
       client_id: client_id,
-      code_verifier: codeVerifier
+      code_verifier: codeVerifier,
     });
 
     const headers = new HttpHeaders({
-      'Content-Type': 'application/x-www-form-urlencoded'
+      'Content-Type': 'application/x-www-form-urlencoded',
     });
 
     try {
-      const response: any = await this.http.post(
-        'https://accounts.spotify.com/api/token',
-        body.toString(),
-        { headers }
-      ).toPromise();
+      const response: any = await this.http
+        .post('https://accounts.spotify.com/api/token', body.toString(), {
+          headers,
+        })
+        .toPromise();
 
       this.accessToken = response.access_token;
 
@@ -272,5 +364,4 @@ export class AppComponent implements OnInit, OnDestroy {
     this.accessToken = null;
     this.clearStoredToken();
   }
-
 }
