@@ -17,6 +17,7 @@ import { AppConfig, APP_CONFIG } from './app-config';
 
 // Constants for magic numbers
 const MILLISECONDS_IN_WEEK = 604800000;
+const MILLISECONDS_IN_MONTH = 2592000000; // 30 days in milliseconds
 const MILLISECONDS_IN_YEAR = 31536000000;
 const RELEASE_DATE_PRECISION_DAY = 'day';
 const DEV_ARTIST_LIMIT = 10;
@@ -158,6 +159,7 @@ export class SpotifyService {
       .filter(
         (item) =>
           this.albumHadBirthdayPastWeek(item, today) ||
+          this.albumHadBirthdayPastMonth(item, today) ||
           this.albumReleasedPastYear(item, todayTimestamp),
       )
       .map((item) => this.mapToAlbum(item));
@@ -271,6 +273,24 @@ export class SpotifyService {
   }
 
   /**
+   * Checks if an album had its birthday in the past month
+   * @param album - The album to check
+   * @param today - Cached today's date to avoid recalculation
+   */
+  private albumHadBirthdayPastMonth(
+    album: AlbumWithArtistId,
+    today: Date,
+  ): boolean {
+    // Parse ISO date string (YYYY-MM-DD) - works across all browsers including Safari
+    const albumDate = new Date(album.release_date + 'T00:00:00');
+
+    albumDate.setFullYear(today.getFullYear());
+    const dateDiffMillis = today.getTime() - albumDate.getTime();
+
+    return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_MONTH;
+  }
+
+  /**
    * Checks if an album was released in the past year
    * @param album - The album to check
    * @param todayTimestamp - Cached today's timestamp to avoid recalculation
@@ -317,5 +337,21 @@ export class SpotifyService {
 
     // Only count albums released in the past (not future)
     return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_YEAR;
+  }
+
+  /**
+   * Static method: Checks if an album had its birthday in the past month
+   * Used by external components and tests
+   */
+  static albumHadBirthdayPastMonth(album: Album): boolean {
+    const today = new Date(Date.now());
+
+    // Parse ISO date string (YYYY-MM-DD) - works across all browsers including Safari
+    const albumDate = new Date(album.release_date + 'T00:00:00');
+
+    albumDate.setFullYear(today.getFullYear());
+    const dateDiffMillis = today.getTime() - albumDate.getTime();
+
+    return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_MONTH;
   }
 }

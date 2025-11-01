@@ -152,6 +152,124 @@ describe('SpotifyService', () => {
     });
   });
 
+  describe('albumHadBirthdayPastMonth', () => {
+    it('should return true for album birthday exactly 1 day ago', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setFullYear(2010); // Set to past year to simulate anniversary
+      const releaseDate = yesterday.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(true);
+    });
+
+    it('should return true for album birthday 15 days ago', () => {
+      const fifteenDaysAgo = new Date();
+      fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+      fifteenDaysAgo.setFullYear(2005);
+      const releaseDate = fifteenDaysAgo.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(true);
+    });
+
+    it('should return true for album birthday 29 days ago', () => {
+      const twentyNineDaysAgo = new Date();
+      twentyNineDaysAgo.setDate(twentyNineDaysAgo.getDate() - 29);
+      twentyNineDaysAgo.setFullYear(2015);
+      const releaseDate = twentyNineDaysAgo.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(true);
+    });
+
+    it('should return false for album birthday exactly 30 days ago (edge of window)', () => {
+      const releaseDate = createLocalDateString(-30, 2012);
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(false);
+    });
+
+    it('should return false for album birthday 31 days ago (outside window)', () => {
+      const thirtyOneDaysAgo = new Date();
+      thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 31);
+      thirtyOneDaysAgo.setFullYear(2011);
+      const releaseDate = thirtyOneDaysAgo.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(false);
+    });
+
+    it('should return true for album birthday today (if current time is past midnight)', () => {
+      const releaseDate = createLocalDateString(0, 2008);
+
+      const album = createAlbum(releaseDate);
+      // Birthday today: albumDate is set to midnight today, and current time is likely after midnight
+      // So dateDiffMillis will be positive (hours since midnight) and less than a month
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(true);
+    });
+
+    it('should return false for album birthday in the future', () => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setFullYear(2020);
+      const releaseDate = tomorrow.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(false);
+    });
+
+    it('should return false for album birthday 60 days ago', () => {
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      sixtyDaysAgo.setFullYear(2018);
+      const releaseDate = sixtyDaysAgo.toISOString().split('T')[0];
+
+      const album = createAlbum(releaseDate);
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(false);
+    });
+
+    it('should return true for albums released today this year (counts as birthday)', () => {
+      const releaseDate = createLocalDateString(0);
+
+      const album = createAlbum(releaseDate);
+      // Album released today: when set to this year (no change), it's the same as birthday today
+      // So it returns true if current time is after midnight
+      expect(SpotifyService.albumHadBirthdayPastMonth(album)).toBe(true);
+    });
+
+    it('should correctly parse ISO date format (Safari compatibility)', () => {
+      // Safari has issues with dates like '2020-01-15' without time component
+      // The function adds 'T00:00:00' to ensure cross-browser compatibility
+      const album = createAlbum('2020-01-15');
+
+      // This should not throw an error
+      expect(() =>
+        SpotifyService.albumHadBirthdayPastMonth(album),
+      ).not.toThrow();
+    });
+
+    it('should handle leap year dates correctly', () => {
+      // Test with Feb 29 (leap year birthday)
+      const album = createAlbum('2020-02-29');
+
+      // Should not throw an error even in non-leap years
+      expect(() =>
+        SpotifyService.albumHadBirthdayPastMonth(album),
+      ).not.toThrow();
+    });
+
+    it('should handle dates that span month boundaries', () => {
+      // Test with dates near month boundaries
+      const album = createAlbum('2020-01-31');
+
+      // Should not throw an error
+      expect(() =>
+        SpotifyService.albumHadBirthdayPastMonth(album),
+      ).not.toThrow();
+    });
+  });
+
   describe('albumReleasedPastYear', () => {
     it('should return true for album released yesterday', () => {
       const yesterday = new Date();
