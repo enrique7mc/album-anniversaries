@@ -175,6 +175,23 @@ h1 {
       background-color: rgba(255, 255, 255, 0.2) !important;
       color: white !important;
       font-weight: 500;
+
+      &.clickable-chip {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.3) !important;
+        }
+      }
+
+      .chip-dropdown-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+        vertical-align: middle;
+      }
     }
   }
 
@@ -210,6 +227,13 @@ h1 {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+
+        .chip-dropdown-icon {
+          font-size: 14px !important;
+          width: 14px !important;
+          height: 14px !important;
+          margin-left: 2px !important;
+        }
       }
     }
   }
@@ -229,5 +253,59 @@ h1 {
 
   h1 {
     color: rgba(255, 255, 255, 0.87);
+  }
+}
+
+// Floating scroll to top button
+.scroll-to-top-button {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 1000 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  pointer-events: auto !important;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.3s ease-in;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive positioning for mobile
+@media only screen and (max-width: 599px) {
+  .scroll-to-top-button {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
   }
 }
