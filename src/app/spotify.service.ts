@@ -285,6 +285,10 @@ export class SpotifyService {
     const albumDate = new Date(album.release_date + 'T00:00:00');
 
     albumDate.setFullYear(today.getFullYear());
+    // Handle cross-year scenarios: if anniversary is in the future, use last year's anniversary
+    if (albumDate.getTime() > today.getTime()) {
+      albumDate.setFullYear(today.getFullYear() - 1);
+    }
     const dateDiffMillis = today.getTime() - albumDate.getTime();
 
     return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_MONTH;
@@ -350,6 +354,10 @@ export class SpotifyService {
     const albumDate = new Date(album.release_date + 'T00:00:00');
 
     albumDate.setFullYear(today.getFullYear());
+    // Handle cross-year scenarios: if anniversary is in the future, use last year's anniversary
+    if (albumDate.getTime() > today.getTime()) {
+      albumDate.setFullYear(today.getFullYear() - 1);
+    }
     const dateDiffMillis = today.getTime() - albumDate.getTime();
 
     return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_MONTH;

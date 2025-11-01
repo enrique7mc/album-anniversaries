@@ -268,6 +268,105 @@ describe('SpotifyService', () => {
         SpotifyService.albumHadBirthdayPastMonth(album),
       ).not.toThrow();
     });
+
+    describe('cross-year anniversary scenarios', () => {
+      it('should return true when today is Jan 5 and album anniversary is Dec 31 (8 days ago)', () => {
+        // Mock today as January 5, 2025
+        const today = new Date('2025-01-05T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released December 31, 2020 (anniversary was Dec 31, 2024 - 5 days ago)
+        const album = createAlbum('2020-12-31');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        expect(result).toBe(true);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+
+      it('should return true when today is Jan 15 and album anniversary is Dec 20 (26 days ago)', () => {
+        // Mock today as January 15, 2025
+        const today = new Date('2025-01-15T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released December 20, 2015 (anniversary was Dec 20, 2024 - 26 days ago)
+        const album = createAlbum('2015-12-20');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        expect(result).toBe(true);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+
+      it('should return false when today is Jan 5 and album anniversary is Nov 30 (36 days ago)', () => {
+        // Mock today as January 5, 2025
+        const today = new Date('2025-01-05T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released November 30, 2018 (anniversary was Nov 30, 2024 - 36 days ago)
+        const album = createAlbum('2018-11-30');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        expect(result).toBe(false);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+
+      it('should return false when today is Jan 20 and album anniversary is Feb 15 (11 months in future)', () => {
+        // Mock today as January 20, 2025
+        const today = new Date('2025-01-20T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released February 15, 2019 (next anniversary Feb 15, 2025 - 26 days in future)
+        const album = createAlbum('2019-02-15');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        expect(result).toBe(false);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+
+      it('should handle edge case: today is Jan 1 and album anniversary is Dec 31 (1 day ago)', () => {
+        // Mock today as January 1, 2025
+        const today = new Date('2025-01-01T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released December 31, 2010 (anniversary was Dec 31, 2024 - 1 day ago)
+        const album = createAlbum('2010-12-31');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        expect(result).toBe(true);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+
+      it('should handle edge case: today is Jan 30 and album anniversary is Dec 31 (30 days ago, boundary)', () => {
+        // Mock today as January 30, 2025
+        const today = new Date('2025-01-30T12:00:00');
+        const originalDateNow = Date.now;
+        spyOn(Date, 'now').and.returnValue(today.getTime());
+
+        // Album released December 31, 2012 (anniversary was Dec 31, 2024 - exactly 30 days ago)
+        const album = createAlbum('2012-12-31');
+
+        const result = SpotifyService.albumHadBirthdayPastMonth(album);
+        // Should be false because it's exactly at the 30-day boundary
+        expect(result).toBe(false);
+
+        // Restore original Date.now
+        Date.now = originalDateNow;
+      });
+    });
   });
 
   describe('albumReleasedPastYear', () => {
