@@ -1,0 +1,19 @@
+.album-list-item-container {
+  display: flex;
+  align-items: center;
+  
+  .album-link {
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; // Allows text truncation
+  }
+
+  .queue-button {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
