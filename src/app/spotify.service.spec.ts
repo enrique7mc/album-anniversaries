@@ -306,7 +306,7 @@ describe('SpotifyService', () => {
         expect(result).toBe(false);
       });
 
-      it('should return false when today is Jan 20 and album anniversary is Feb 15 (11 months in future)', () => {
+      it('should return false when today is Jan 20 and album anniversary is Feb 15 (26 days in future)', () => {
         // Mock today as January 20, 2025
         const today = new Date('2025-01-20T12:00:00');
         spyOn(Date, 'now').and.returnValue(today.getTime());
