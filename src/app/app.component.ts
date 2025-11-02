@@ -8,6 +8,7 @@ import {
   ElementRef,
   ViewChild,
   NgZone,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -26,8 +27,14 @@ import { Artist } from './artist';
 import { Album } from './album';
 import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
-import { Subscription, Subject } from 'rxjs';
-import { map, takeUntil, take } from 'rxjs/operators';
+import {
+  Subscription,
+  Subject,
+  BehaviorSubject,
+  combineLatest,
+  fromEvent,
+} from 'rxjs';
+import { map, takeUntil, take, throttleTime } from 'rxjs/operators';
 import { Functions } from '@angular/fire/functions';
 import { ThemeService } from './theme.service';
 
@@ -49,6 +56,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   // UI state for the header chip
   currentFilterLabel: string = 'This Week';
 
+  // Scroll to top button visibility
+  showScrollToTop: boolean = false;
+
+  // Anniversary range selection
+  anniversaryRange: 'week' | 'month' = 'week';
+  private anniversaryRange$ = new BehaviorSubject<'week' | 'month'>('week');
+
   // Section anchors (inside *ngIf, so static must be false)
   @ViewChild('weekSection', { static: false })
   weekSection: ElementRef<HTMLElement>;
@@ -67,6 +81,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private http: HttpClient,
     private themeService: ThemeService,
     private ngZone: NgZone,
+    private cdr: ChangeDetectorRef,
     @Inject(APP_CONFIG) private config: AppConfig,
   ) {
     this.title = config.title;
@@ -74,6 +89,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   async ngOnInit() {
     this.initializeTheme();
+    this.setupScrollListener();
     // First, check if there's a valid stored token
     const storedToken = this.getStoredToken();
     if (storedToken) {
@@ -119,18 +135,22 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         takeUntil(this._destroyed$),
       );
 
-      this.artists$ = (
-        this.spotifyService.artists as Observable<Artist[]>
-      ).pipe(
-        map((artists) => artists.map((a) => Object.assign({}, a))),
-        map((artists) =>
-          artists.filter((artist) => {
-            artist.albums = artist.albums.filter(
-              SpotifyService.albumHadBirthdayPastWeek,
+      // Anniversary range-aware filtering for week/month selection
+      this.artists$ = combineLatest([
+        this.spotifyService.artists as Observable<Artist[]>,
+        this.anniversaryRange$,
+      ]).pipe(
+        map(([artists, range]) => {
+          const filteredArtists = artists.map((a) => Object.assign({}, a));
+          return filteredArtists.filter((artist) => {
+            artist.albums = artist.albums.filter((album) =>
+              range === 'week'
+                ? SpotifyService.albumHadBirthdayPastWeek(album)
+                : SpotifyService.albumHadBirthdayPastMonth(album),
             );
             return artist.albums.length > 0;
-          }),
-        ),
+          });
+        }),
         takeUntil(this._destroyed$),
       );
 
@@ -174,8 +194,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
                   this.currentFilterLabel = 'Last Year';
                 }
               } else {
-                if (this.currentFilterLabel !== 'This Week') {
-                  this.currentFilterLabel = 'This Week';
+                const expectedLabel =
+                  this.anniversaryRange === 'week' ? 'This Week' : 'This Month';
+                if (this.currentFilterLabel !== expectedLabel) {
+                  this.currentFilterLabel = expectedLabel;
                 }
               }
             }
@@ -199,6 +221,65 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this._destroyed$.next();
     this._destroyed$.complete();
+  }
+
+  /**
+   * Sets up scroll listener to show/hide scroll to top button
+   */
+  private setupScrollListener(): void {
+    // Initial check
+    this.checkScrollPosition();
+
+    // Use RxJS fromEvent for more reliable scroll detection
+    fromEvent(window, 'scroll', { passive: true })
+      .pipe(
+        throttleTime(100), // Throttle to avoid excessive checks
+        takeUntil(this._destroyed$),
+      )
+      .subscribe(() => {
+        this.checkScrollPosition();
+      });
+
+    // Also listen to document scroll for better compatibility
+    fromEvent(document, 'scroll', { passive: true })
+      .pipe(throttleTime(100), takeUntil(this._destroyed$))
+      .subscribe(() => {
+        this.checkScrollPosition();
+      });
+  }
+
+  /**
+   * Checks scroll position and shows/hides the scroll to top button
+   */
+  private checkScrollPosition(): void {
+    this.ngZone.run(() => {
+      const scrollThreshold = 200; // Show button after scrolling 200px
+      // Use multiple methods to get scroll position for better compatibility
+      const scrollY =
+        window.pageYOffset ||
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+
+      const shouldShow = scrollY > scrollThreshold;
+
+      if (this.showScrollToTop !== shouldShow) {
+        this.showScrollToTop = shouldShow;
+        // Explicitly trigger change detection
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Scrolls to the top of the page
+   */
+  scrollToTop(): void {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
   }
 
   private initializeTheme(): void {
@@ -360,5 +441,42 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   logout(): void {
     this.accessToken = null;
     this.clearStoredToken();
+  }
+
+  /**
+   * Sets the anniversary range (week or month) and updates the filter
+   */
+  setAnniversaryRange(range: 'week' | 'month'): void {
+    this.anniversaryRange = range;
+    this.anniversaryRange$.next(range);
+    // Always update the chip label to reflect the new range
+    // Since we're scrolling to the week section, it will show the week/month view
+    this.currentFilterLabel = range === 'week' ? 'This Week' : 'This Month';
+    // Scroll to top to show the updated anniversary section
+    this.scrollToWeekSection();
+  }
+
+  /**
+   * Scrolls to the week section at the top of the page
+   */
+  private scrollToWeekSection(): void {
+    if (this.weekSection && this.weekSection.nativeElement) {
+      const toolbarOffset = 64; // sticky toolbar height
+      const elementPosition =
+        this.weekSection.nativeElement.getBoundingClientRect().top;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - toolbarOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+    } else {
+      // Fallback: scroll to top of page if section not available yet
+      window.scrollTo({
+        top: 64, // Account for toolbar
+        behavior: 'smooth',
+      });
+    }
   }
 }
