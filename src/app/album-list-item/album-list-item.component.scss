@@ -1,7 +1,17 @@
 .album-list-item-container {
   display: flex;
   align-items: center;
-  
+
+  // Ensure Material's avatar styling is preserved (circular)
+  [matListItemAvatar],
+  .avatar {
+    border-radius: 50% !important;
+    overflow: hidden;
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+  }
+
   .album-link {
     flex: 1;
     text-decoration: none;
@@ -9,6 +19,7 @@
     display: flex;
     flex-direction: column;
     min-width: 0; // Allows text truncation
+    padding-left: 16px; // Standard Material list item padding between avatar and content
   }
 
   .queue-button {
@@ -16,4 +27,3 @@
     flex-shrink: 0;
   }
 }
-

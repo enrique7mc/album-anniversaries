@@ -9,9 +9,10 @@
   width: 100%;
 }
 
-.mat-nav-list {
-  height: 250px;
-  overflow-y: scroll;
+mat-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 mat-card-header {

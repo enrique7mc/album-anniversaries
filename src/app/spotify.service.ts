@@ -383,10 +383,7 @@ export class SpotifyService {
    * @param albumId - Spotify album ID
    * @returns Observable that emits an array of track URIs
    */
-  getAlbumTracks(
-    accessToken: string,
-    albumId: string,
-  ): Observable<string[]> {
+  getAlbumTracks(accessToken: string, albumId: string): Observable<string[]> {
     const httpOptions = this.createAuthHeaders(accessToken);
     const url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
 
@@ -423,13 +420,19 @@ export class SpotifyService {
             const url = `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(
               trackUri,
             )}`;
-            // Add a small delay between requests (50ms) except for the first one
-            const request = this.http.post(url, {}, httpOptions);
+            // Spotify returns plain text (not JSON) for this endpoint, so use 'text' responseType
+            const requestOptions = {
+              ...httpOptions,
+              responseType: 'text' as const,
+            };
+            // Add a small delay before each request (50ms) except for the first one
             return index === 0
-              ? request
-              : request.pipe(delay(50));
+              ? this.http.post(url, {}, requestOptions)
+              : of(null).pipe(
+                  delay(50),
+                  switchMap(() => this.http.post(url, {}, requestOptions)),
+                );
           }),
-          map(() => undefined),
           catchError((error) => {
             console.error(
               `[SpotifyService] Error adding album ${albumId} to queue:`,

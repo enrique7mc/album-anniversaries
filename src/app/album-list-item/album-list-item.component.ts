@@ -36,7 +36,10 @@ export class AlbumListItemComponent {
   }
 
   get albumCoverUrl(): string {
-    const thumbnail = this.album.images[2];
+    const thumbnail =
+      this.album.images && this.album.images.length > 2
+        ? this.album.images[2]
+        : null;
     return thumbnail != null ? thumbnail.url : 'https://via.placeholder.com/40';
   }
 
@@ -70,19 +73,15 @@ export class AlbumListItemComponent {
       next: () => {
         this.isAddingToQueue = false;
         this.cdr.markForCheck();
-        this.snackBar.open(
-          `"${this.album.name}" added to queue`,
-          'Close',
-          {
-            duration: 3000,
-          },
-        );
+        this.snackBar.open(`"${this.album.name}" added to queue`, 'Close', {
+          duration: 3000,
+        });
       },
       error: (error) => {
         this.isAddingToQueue = false;
         this.cdr.markForCheck();
         console.error('Error adding album to queue:', error);
-        
+
         let errorMessage = 'Failed to add album to queue';
         if (error.status === 404) {
           errorMessage =
