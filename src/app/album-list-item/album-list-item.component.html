@@ -1,5 +1,17 @@
-<a mat-list-item [href]="album.external_url" target="_blank">
+<div mat-list-item class="album-list-item-container">
   <img class="avatar" matListItemAvatar [src]="albumCoverUrl" [alt]="altTag" />
-  <div matListItemTitle>{{ album.name }}</div>
-  <div matListItemLine>{{ album.release_date }}</div>
-</a>
+  <a [href]="album.external_url" target="_blank" class="album-link">
+    <div matListItemTitle>{{ album.name }}</div>
+    <div matListItemLine>{{ album.release_date }}</div>
+  </a>
+  <button
+    mat-icon-button
+    [disabled]="isAddingToQueue"
+    (click)="addToQueue($event)"
+    class="queue-button"
+    [attr.aria-label]="'Add ' + album.name + ' to queue'"
+    title="Add to queue"
+  >
+    <mat-icon>{{ isAddingToQueue ? 'hourglass_empty' : 'queue_music' }}</mat-icon>
+  </button>
+</div>
