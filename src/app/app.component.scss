@@ -236,6 +236,12 @@ h1 {
         }
       }
     }
+
+    .logout-button {
+      mat-icon {
+        display: none;
+      }
+    }
   }
 }
 
