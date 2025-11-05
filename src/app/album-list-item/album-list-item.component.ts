@@ -2,7 +2,6 @@ import {
   Component,
   ChangeDetectionStrategy,
   Input,
-  ViewEncapsulation,
   ChangeDetectorRef,
 } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
