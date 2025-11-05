@@ -156,6 +156,7 @@ export class SpotifyService {
   /**
    * Filters and maps albums based on release date criteria
    * Caches "today" to avoid recalculating for each album
+   * Sorts albums by release date in descending order (newest first)
    */
   private filterAndMapAlbums(
     items: SpotifyAlbumResponse[],
@@ -176,7 +177,12 @@ export class SpotifyService {
           this.albumHadBirthdayPastMonth(item, today) ||
           this.albumReleasedPastYear(item, todayTimestamp),
       )
-      .map((item) => this.mapToAlbum(item));
+      .map((item) => this.mapToAlbum(item))
+      .sort((a, b) => {
+        // Sort by release_date in descending order (newest first)
+        // ISO format (YYYY-MM-DD) can be compared as strings
+        return b.release_date.localeCompare(a.release_date);
+      });
   }
 
   /**
