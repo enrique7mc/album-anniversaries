@@ -36,7 +36,6 @@ import {
 } from 'rxjs';
 import { map, takeUntil, take, throttleTime } from 'rxjs/operators';
 import { Functions } from '@angular/fire/functions';
-import { ThemeService } from './theme.service';
 
 @Component({
   selector: 'app-root',
@@ -55,6 +54,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // UI state for the header chip
   currentFilterLabel: string = 'This Week';
+
+  // Dropdown state
+  dropdownOpen: boolean = false;
 
   // Scroll to top button visibility
   showScrollToTop: boolean = false;
@@ -79,7 +81,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private spotifyService: SpotifyService,
     private pkceService: PkceService,
     private http: HttpClient,
-    private themeService: ThemeService,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
     @Inject(APP_CONFIG) private config: AppConfig,
@@ -88,7 +89,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async ngOnInit() {
-    this.initializeTheme();
     this.setupScrollListener();
     // First, check if there's a valid stored token
     const storedToken = this.getStoredToken();
@@ -282,8 +282,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private initializeTheme(): void {
-    this.themeService.applyCurrentTheme();
+  /**
+   * Toggles the dropdown menu open/closed
+   */
+  toggleDropdown(): void {
+    this.dropdownOpen = !this.dropdownOpen;
   }
 
   get authError(): boolean {
@@ -452,6 +455,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     // Always update the chip label to reflect the new range
     // Since we're scrolling to the week section, it will show the week/month view
     this.currentFilterLabel = range === 'week' ? 'This Week' : 'This Month';
+    // Close the dropdown
+    this.dropdownOpen = false;
     // Scroll to top to show the updated anniversary section
     this.scrollToWeekSection();
   }

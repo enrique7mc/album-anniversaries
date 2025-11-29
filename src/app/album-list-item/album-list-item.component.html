@@ -1,17 +1,40 @@
-<div mat-list-item class="album-list-item-container">
-  <img class="avatar" matListItemAvatar [src]="albumCoverUrl" [alt]="altTag" />
-  <a [href]="album.external_url" target="_blank" class="album-link">
-    <div matListItemTitle>{{ album.name }}</div>
-    <div matListItemLine>{{ album.release_date }}</div>
-  </a>
-  <button
-    mat-icon-button
-    [disabled]="isAddingToQueue"
-    (click)="addToQueue($event)"
-    class="queue-button"
-    [attr.aria-label]="'Add ' + album.name + ' to queue'"
-    title="Add to queue"
+<div
+  class="group relative cursor-pointer aspect-square overflow-hidden rounded-md"
+>
+  <!-- Album Cover (Primary Visual) -->
+  <img
+    [src]="albumCoverUrl"
+    [alt]="altTag"
+    class="w-full h-full object-cover shadow-sm-dark transition-all duration-250 ease-smooth group-hover:scale-105 group-hover:shadow-md-dark"
+  />
+
+  <!-- Hover Overlay with Details -->
+  <div
+    class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-250 flex flex-col justify-end p-3"
   >
-    <mat-icon>{{ isAddingToQueue ? 'hourglass_empty' : 'queue_music' }}</mat-icon>
-  </button>
+    <!-- Album Name -->
+    <h3 class="text-sm font-medium text-white truncate mb-1">
+      {{ album.name }}
+    </h3>
+
+    <!-- Release Date -->
+    <p class="text-xs text-gray-300 mb-3">
+      {{ album.release_date }}
+    </p>
+
+    <!-- Queue Button -->
+    <button
+      (click)="addToQueue($event)"
+      [disabled]="isAddingToQueue"
+      class="flex items-center gap-2 text-sm text-accent-primary hover:text-accent-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      [attr.aria-label]="'Add ' + album.name + ' to queue'"
+      title="Add to queue"
+    >
+      <lucide-icon
+        [name]="isAddingToQueue ? 'clock' : 'list-music'"
+        class="w-4 h-4"
+      ></lucide-icon>
+      <span>Queue</span>
+    </button>
+  </div>
 </div>

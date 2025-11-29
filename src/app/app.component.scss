@@ -1,295 +1,6 @@
-@use '@angular/material' as mat;
-@use '../theme' as theme;
+// Custom animations for app component
 
-body {
-  padding-top: 64px;
-}
-
-h1 {
-  margin: 24px 0 16px 0;
-  font-size: 24px;
-  font-weight: 500;
-}
-
-.artist-list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-
-  app-artist-card {
-    width: 100%;
-    min-width: 0; // Prevents grid blowout
-  }
-}
-
-@media only screen and (min-width: 320px) and (max-width: 799px) {
-  .container {
-    width: 90%;
-    margin: 0 auto;
-  }
-
-  .artist-list {
-    max-width: 460px;
-    gap: 8px;
-  }
-}
-
-@media only screen and (min-width: 800px) {
-  .container {
-    width: 85%;
-    margin: 0 auto;
-  }
-
-  .artist-list {
-    max-width: 1400px;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-  }
-}
-
-// Enhanced login card styling
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 64px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 24px;
-  overflow: auto;
-  box-sizing: border-box;
-
-  .login-card {
-    max-width: 450px;
-    width: 100%;
-    text-align: center;
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-
-    mat-card-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 32px 24px;
-      text-align: center;
-
-      .mat-mdc-card-avatar {
-        width: 64px !important;
-        height: 64px !important;
-        background-color: rgba(255, 255, 255, 0.2) !important;
-        border-radius: 50% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 auto 16px auto !important;
-
-        mat-icon {
-          font-size: 32px !important;
-          color: white !important;
-        }
-      }
-
-      .mat-mdc-card-title {
-        font-size: 28px !important;
-        font-weight: 600 !important;
-        margin-bottom: 8px !important;
-        color: white !important;
-      }
-
-      .mat-mdc-card-subtitle {
-        font-size: 16px !important;
-        color: rgba(255, 255, 255, 0.9) !important;
-        line-height: 1.5 !important;
-      }
-    }
-
-    mat-card-content {
-      padding: 24px !important;
-
-      p {
-        font-size: 14px;
-        line-height: 1.6;
-        margin: 0;
-      }
-    }
-
-    mat-card-actions {
-      padding: 0 24px 32px 24px !important;
-      display: flex;
-      justify-content: center;
-
-      .login-button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white !important;
-        padding: 14px 32px !important;
-        font-size: 16px !important;
-        font-weight: 500 !important;
-        border-radius: 25px !important;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
-        transition: all 0.3s ease !important;
-
-        &:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
-        }
-
-        mat-icon {
-          margin-right: 8px !important;
-        }
-      }
-    }
-  }
-}
-
-.sticky-nav {
-  position: fixed;
-  right: 0;
-  left: 0;
-  top: 0;
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  .header-icon {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-  }
-
-  .title {
-    font-size: 20px;
-    font-weight: 500;
-  }
-
-  .spacer {
-    flex: 1 1 auto;
-  }
-
-  .header-chips {
-    margin-right: 8px;
-
-    mat-chip {
-      background-color: rgba(255, 255, 255, 0.2) !important;
-      color: white !important;
-      font-weight: 500;
-
-      &.clickable-chip {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.3) !important;
-        }
-      }
-
-      .chip-dropdown-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        margin-left: 4px;
-        vertical-align: middle;
-      }
-    }
-  }
-
-  .logout-button {
-    mat-icon {
-      margin-right: 4px;
-    }
-  }
-}
-
-// Responsive tweaks for small screens
-@media only screen and (max-width: 599px) {
-  .sticky-nav {
-    gap: 6px;
-
-    .header-icon {
-      display: none;
-    }
-
-    .title {
-      font-size: 16px;
-    }
-
-    .header-chips {
-      margin-right: 2px;
-
-      mat-chip {
-        font-size: 12px !important;
-        padding: 0 8px !important;
-        height: 28px !important;
-        line-height: 28px !important;
-        max-width: 96px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        .chip-dropdown-icon {
-          font-size: 14px !important;
-          width: 14px !important;
-          height: 14px !important;
-          margin-left: 2px !important;
-        }
-      }
-    }
-
-    .logout-button {
-      mat-icon {
-        display: none;
-      }
-    }
-  }
-}
-
-// Theme-specific styles
-.light-theme {
-  .login-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-}
-
-.dark-theme {
-  .login-container {
-    background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
-  }
-
-  h1 {
-    color: rgba(255, 255, 255, 0.87);
-  }
-}
-
-// Floating scroll to top button
-.scroll-to-top-button {
-  position: fixed !important;
-  bottom: 24px !important;
-  right: 24px !important;
-  z-index: 1000 !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  display: flex !important;
-  pointer-events: auto !important;
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: fadeIn 0.3s ease-in;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -300,18 +11,26 @@ h1 {
   }
 }
 
-// Responsive positioning for mobile
-@media only screen and (max-width: 599px) {
-  .scroll-to-top-button {
-    bottom: 16px;
-    right: 16px;
-    width: 48px;
-    height: 48px;
-
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-scale-in {
+  animation: scale-in 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Ensure dropdowns appear above other content
+.relative {
+  position: relative;
 }
