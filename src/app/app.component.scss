@@ -1,4 +1,159 @@
-// Custom animations for app component
+// ============================================
+// HERO LOGIN PAGE STYLES
+// ============================================
+
+.login-hero {
+  background: linear-gradient(135deg, #0a0e1a 0%, #12182b 50%, #0f1423 100%);
+  position: relative;
+}
+
+// Atmospheric background glow
+.hero-bg-glow {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(91, 141, 239, 0.15) 0%,
+    transparent 70%
+  );
+  filter: blur(80px);
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+// Hero headline - BOLD typography
+.hero-headline {
+  font-family: 'Lexend Deca', sans-serif;
+  font-size: clamp(3rem, 10vw, 7rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #e8edf5;
+  margin: 0;
+  padding: 0;
+}
+
+// Gradient text effect
+.hero-gradient {
+  display: inline-block;
+  background: linear-gradient(135deg, #5b8def 0%, #7ea3f4 50%, #4a7de8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 80px rgba(91, 141, 239, 0.3);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, #5b8def, transparent);
+    border-radius: 2px;
+  }
+}
+
+// Supporting subtitle
+.hero-subtitle {
+  font-size: clamp(1.125rem, 2vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.6;
+  color: #9ca9c4;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+// Hero CTA Button
+.hero-cta {
+  position: relative;
+  padding: 1.25rem 3rem;
+  font-size: 1.125rem;
+  background: linear-gradient(135deg, #5b8def 0%, #4a7de8 100%);
+  border: 2px solid rgba(91, 141, 239, 0.3);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(91, 141, 239, 0.3);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(91, 141, 239, 0.5);
+    border-color: rgba(91, 141, 239, 0.6);
+  }
+
+  &:active {
+    transform: translateY(-2px);
+  }
+}
+
+.hero-cta-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+
+  .hero-cta:hover & {
+    opacity: 1;
+  }
+}
+
+// Hero entrance animation
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-enter {
+  animation: hero-enter 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Slow spin for disc icon
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+// ============================================
+// EXISTING ANIMATIONS
+// ============================================
 
 @keyframes fade-in {
   from {

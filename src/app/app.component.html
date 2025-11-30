@@ -71,25 +71,70 @@
 <!-- Login Page -->
 <div
   *ngIf="!accessToken"
-  class="min-h-screen flex items-center justify-center px-4"
+  class="login-hero min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
 >
+  <!-- Atmospheric Background -->
+  <div class="hero-bg-glow"></div>
+
+  <!-- Main Content -->
   <div
-    class="bg-bg-secondary rounded-lg shadow-lg-dark p-8 max-w-md w-full animate-scale-in"
+    class="relative z-10 max-w-5xl mx-auto text-center space-y-8 animate-hero-enter"
   >
-    <div class="flex flex-col items-center text-center space-y-6">
-      <lucide-icon name="music" class="w-16 h-16 text-accent-primary">
-      </lucide-icon>
-      <h2 class="text-2xl font-display font-semibold">Album Anniversaries</h2>
-      <p class="text-text-tertiary">
-        Discover albums celebrating anniversaries from your favorite artists
-      </p>
-      <button
-        (click)="login()"
-        class="btn-primary w-full flex items-center justify-center gap-2"
-      >
-        <lucide-icon name="log-in" class="w-5 h-5"></lucide-icon>
-        <span>Connect with Spotify</span>
+    <!-- Icon with Glow -->
+    <div class="flex justify-center mb-6">
+      <div class="relative">
+        <div
+          class="absolute inset-0 blur-2xl bg-accent-primary/30 rounded-full scale-150"
+        ></div>
+        <lucide-icon
+          name="disc"
+          class="w-24 h-24 text-accent-primary relative animate-spin-slow"
+        >
+        </lucide-icon>
+      </div>
+    </div>
+
+    <!-- Hero Headline -->
+    <h1 class="hero-headline">
+      Rediscover Your
+      <span class="hero-gradient">Musical Past</span>
+    </h1>
+
+    <!-- Supporting Copy -->
+    <p class="hero-subtitle">
+      Celebrate the albums that defined moments in music history.<br />
+      Journey through anniversaries from your most-loved artists.
+    </p>
+
+    <!-- CTA Button -->
+    <div class="flex justify-center pt-6">
+      <button (click)="login()" class="hero-cta group">
+        <span class="relative z-10 flex items-center gap-3">
+          <lucide-icon name="music" class="w-6 h-6"></lucide-icon>
+          <span class="font-semibold tracking-wide">Connect with Spotify</span>
+          <lucide-icon
+            name="arrow-right"
+            class="w-5 h-5 transition-transform group-hover:translate-x-1"
+          ></lucide-icon>
+        </span>
+        <div class="hero-cta-glow"></div>
       </button>
+    </div>
+
+    <!-- Subtle Feature Hints -->
+    <div class="pt-12 flex justify-center gap-12 text-text-tertiary text-sm">
+      <div class="flex items-center gap-2">
+        <lucide-icon name="calendar" class="w-4 h-4"></lucide-icon>
+        <span>Anniversary Tracking</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <lucide-icon name="sparkles" class="w-4 h-4"></lucide-icon>
+        <span>Recent Releases</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <lucide-icon name="list-music" class="w-4 h-4"></lucide-icon>
+        <span>Queue Integration</span>
+      </div>
     </div>
   </div>
 </div>
