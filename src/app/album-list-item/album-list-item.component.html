@@ -1,40 +1,46 @@
 <div
-  class="group relative cursor-pointer aspect-square overflow-hidden rounded-md"
+  #cardWrapper
+  class="card-3d-wrapper"
+  (mousemove)="onMouseMove($event)"
+  (mouseleave)="onMouseLeave()"
 >
-  <!-- Album Cover (Primary Visual) -->
-  <img
-    [src]="albumCoverUrl"
-    [alt]="altTag"
-    class="w-full h-full object-cover shadow-sm-dark transition-all duration-250 ease-smooth group-hover:scale-105 group-hover:shadow-md-dark"
-  />
+  <div #card class="album-card group">
+    <!-- Album Cover -->
+    <div class="album-cover-container">
+      <img
+        [src]="albumCoverUrl"
+        [alt]="altTag"
+        class="album-cover"
+        loading="lazy"
+      />
+    </div>
 
-  <!-- Hover Overlay with Details -->
-  <div
-    class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-250 flex flex-col justify-end p-3"
-  >
-    <!-- Album Name -->
-    <h3 class="text-sm font-medium text-white truncate mb-1">
-      {{ album.name }}
-    </h3>
+    <!-- Hover Overlay with Details -->
+    <div class="album-info-overlay">
+      <!-- Album Name -->
+      <h3 class="album-name">
+        {{ album.name }}
+      </h3>
 
-    <!-- Release Date -->
-    <p class="text-xs text-gray-300 mb-3">
-      {{ album.release_date }}
-    </p>
+      <!-- Release Date -->
+      <p class="album-date">
+        {{ album.release_date }}
+      </p>
 
-    <!-- Queue Button -->
-    <button
-      (click)="addToQueue($event)"
-      [disabled]="isAddingToQueue"
-      class="flex items-center gap-2 text-sm text-accent-primary hover:text-accent-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-      [attr.aria-label]="'Add ' + album.name + ' to queue'"
-      title="Add to queue"
-    >
-      <lucide-icon
-        [name]="isAddingToQueue ? 'clock' : 'list-music'"
-        class="w-4 h-4"
-      ></lucide-icon>
-      <span>Queue</span>
-    </button>
+      <!-- Queue Button -->
+      <button
+        (click)="addToQueue($event)"
+        [disabled]="isAddingToQueue"
+        class="queue-button"
+        [attr.aria-label]="'Add ' + album.name + ' to queue'"
+        title="Add to queue"
+      >
+        <lucide-icon
+          [name]="isAddingToQueue ? 'clock' : 'list-music'"
+          class="w-4 h-4"
+        ></lucide-icon>
+        <span>Queue</span>
+      </button>
+    </div>
   </div>
 </div>

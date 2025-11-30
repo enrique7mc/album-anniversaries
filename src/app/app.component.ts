@@ -7,6 +7,8 @@ import {
   AfterViewInit,
   ElementRef,
   ViewChild,
+  ViewChildren,
+  QueryList,
   NgZone,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -22,6 +24,7 @@ import {
 } from './constants';
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
+import { GsapService } from './gsap.service';
 import { Observable } from 'rxjs';
 import { Artist } from './artist';
 import { Album } from './album';
@@ -71,6 +74,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('yearSection', { static: false })
   yearSection: ElementRef<HTMLElement>;
 
+  // Album grid refs for GSAP animations
+  @ViewChildren('albumsGrid') albumGrids: QueryList<ElementRef>;
+
+  // Scroll progress bar ref
+  @ViewChild('scrollProgressBar', { static: false })
+  scrollProgressBar: ElementRef<HTMLElement>;
+
   private sectionObserver?: IntersectionObserver;
   private observerInitialized: boolean = false;
 
@@ -83,6 +93,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private http: HttpClient,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
+    private gsapService: GsapService,
     @Inject(APP_CONFIG) private config: AppConfig,
   ) {
     this.title = config.title;
@@ -164,6 +175,33 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initObserverIfReady();
+    this.initGsapAnimations();
+  }
+
+  /**
+   * Initialize GSAP animations after view is ready
+   */
+  private initGsapAnimations(): void {
+    // Initialize scroll progress bar
+    if (this.scrollProgressBar) {
+      this.gsapService.createScrollProgress(
+        this.scrollProgressBar.nativeElement,
+      );
+    }
+
+    // Animate album grids when data loads
+    this.artists$.pipe(take(1)).subscribe(() => {
+      setTimeout(() => {
+        if (this.albumGrids) {
+          this.albumGrids.forEach((gridRef, index) => {
+            this.gsapService.animateAlbumGrid(
+              gridRef.nativeElement,
+              index * 0.1,
+            );
+          });
+        }
+      }, 100);
+    });
   }
 
   private initObserverIfReady(): void {
@@ -219,6 +257,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.sectionObserver) {
       this.sectionObserver.disconnect();
     }
+    // Clean up GSAP ScrollTriggers
+    this.gsapService.killAllScrollTriggers();
     this._destroyed$.next();
     this._destroyed$.complete();
   }
@@ -459,6 +499,20 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.dropdownOpen = false;
     // Scroll to top to show the updated anniversary section
     this.scrollToWeekSection();
+  }
+
+  /**
+   * TrackBy function for artists to optimize ngFor rendering
+   */
+  trackByArtistId(index: number, artist: Artist): string {
+    return artist.id;
+  }
+
+  /**
+   * TrackBy function for albums to optimize ngFor rendering
+   */
+  trackByAlbumId(index: number, album: Album): string {
+    return album.id;
   }
 
   /**

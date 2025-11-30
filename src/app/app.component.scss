@@ -1,4 +1,82 @@
 // ============================================
+// SCROLL PROGRESS BAR
+// ============================================
+
+.scroll-progress-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scroll-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5b8def, #7ea3f4);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+// ============================================
+// ALBUMS SECTION LAYOUT
+// ============================================
+
+.albums-section {
+  margin-bottom: 4rem;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 3rem;
+  text-align: center;
+  color: var(--text-primary, #e8edf5);
+}
+
+.artist-section {
+  margin-bottom: 3rem;
+}
+
+.artist-header {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: sticky;
+  top: 64px; // Height of page header
+  z-index: 40;
+  background: rgba(18, 24, 43, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary, #e8edf5);
+}
+
+.albums-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(2, 1fr); // Mobile
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr); // Tablet
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr); // Desktop
+    gap: 2rem;
+  }
+
+  @media (min-width: 1536px) {
+    grid-template-columns: repeat(5, 1fr); // Large screens
+  }
+}
+
+// ============================================
 // HERO LOGIN PAGE STYLES
 // ============================================
 

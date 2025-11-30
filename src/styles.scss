@@ -57,3 +57,33 @@
            hover:shadow-lg-dark transition-shadow duration-250;
   }
 }
+
+// Custom cursor styles
+.custom-cursor {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #5b8def;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform-origin: center center;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor.hover {
+  background-color: rgba(91, 141, 239, 0.3);
+  border-color: #7ea3f4;
+}
+
+// Hide default cursor when custom cursor is active
+.custom-cursor-active {
+  cursor: none;
+
+  * {
+    cursor: none;
+  }
+}

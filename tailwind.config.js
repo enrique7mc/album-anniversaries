@@ -16,8 +16,8 @@ module.exports = {
         'text-tertiary': '#6b7a99',
       },
       fontFamily: {
-        display: ['Lexend Deca', 'sans-serif'],
-        body: ['Outfit', 'sans-serif'],
+        display: ['Bebas Neue', 'sans-serif'],
+        body: ['Space Mono', 'monospace'],
       },
       boxShadow: {
         'sm-dark': '0 1px 3px rgba(0, 0, 0, 0.4)',

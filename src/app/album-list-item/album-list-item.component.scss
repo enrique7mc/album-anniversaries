@@ -1,1 +1,192 @@
-// All styles handled by Tailwind utility classes
+// ============================================
+// 3D CARD WRAPPER
+// ============================================
+
+.card-3d-wrapper {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  cursor: pointer;
+  aspect-ratio: 1;
+  position: relative;
+}
+
+// ============================================
+// ALBUM CARD
+// ============================================
+
+.album-card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: box-shadow 0.3s ease;
+  will-change: transform;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-secondary, #12182b);
+}
+
+// ============================================
+// ALBUM COVER
+// ============================================
+
+.album-cover-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.album-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.album-card:hover .album-cover {
+  transform: scale(1.05);
+}
+
+// ============================================
+// HOVER OVERLAY
+// ============================================
+
+.album-info-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.7) 50%,
+    transparent 100%
+  );
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+.album-card:hover .album-info-overlay {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+// ============================================
+// TEXT STYLES
+// ============================================
+
+.album-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+}
+
+.album-date {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  color: #9ca9c4;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+// ============================================
+// QUEUE BUTTON
+// ============================================
+
+.queue-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-primary, #5b8def);
+  background: transparent;
+  border: 1px solid var(--accent-primary, #5b8def);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-primary, #5b8def);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(91, 141, 239, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ============================================
+// CARD SHADOWS & HOVER EFFECTS
+// ============================================
+
+.album-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.album-card:hover {
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(91, 141, 239, 0.2);
+}
+
+// ============================================
+// MOBILE OPTIMIZATIONS
+// ============================================
+
+@media (max-width: 768px) {
+  // Disable 3D tilt on mobile for performance
+  .card-3d-wrapper {
+    perspective: none;
+  }
+
+  // Show overlay on tap instead of hover
+  .album-info-overlay {
+    transform: translateY(0);
+    opacity: 1;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.9) 0%,
+      transparent 100%
+    );
+    padding: 1rem;
+  }
+
+  .album-name {
+    font-size: 1rem;
+  }
+
+  .album-date {
+    font-size: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .queue-button {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+}

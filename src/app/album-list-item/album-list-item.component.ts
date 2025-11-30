@@ -3,9 +3,13 @@ import {
   ChangeDetectionStrategy,
   Input,
   ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
+  NgZone,
 } from '@angular/core';
 import { Album } from '../album';
 import { SpotifyService } from '../spotify.service';
+import { GsapService } from '../gsap.service';
 import { accessTokenKey } from '../constants';
 
 @Component({
@@ -18,11 +22,16 @@ export class AlbumListItemComponent {
   @Input()
   album: Album;
 
+  @ViewChild('cardWrapper') wrapperRef: ElementRef<HTMLElement>;
+  @ViewChild('card') cardRef: ElementRef<HTMLElement>;
+
   isAddingToQueue: boolean = false;
 
   constructor(
     private spotifyService: SpotifyService,
     private cdr: ChangeDetectorRef,
+    private gsapService: GsapService,
+    private ngZone: NgZone,
   ) {}
 
   get altTag(): string {
@@ -84,5 +93,53 @@ export class AlbumListItemComponent {
         console.error(errorMessage);
       },
     });
+  }
+
+  /**
+   * Handle mouse move for 3D tilt effect
+   * Calculates rotation based on mouse position relative to card center
+   */
+  onMouseMove(event: MouseEvent): void {
+    // Skip on mobile devices
+    if (window.innerWidth <= 768) {
+      return;
+    }
+
+    if (!this.wrapperRef || !this.cardRef) {
+      return;
+    }
+
+    const wrapper = this.wrapperRef.nativeElement;
+    const card = this.cardRef.nativeElement;
+    const rect = wrapper.getBoundingClientRect();
+
+    // Get mouse position relative to card
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Calculate rotation (max 15 degrees)
+    const rotateY = ((x - centerX) / centerX) * 15;
+    const rotateX = ((centerY - y) / centerY) * 15;
+
+    // Apply tilt using GSAP
+    this.gsapService.tilt3D(card, rotateX, rotateY, 0.3);
+  }
+
+  /**
+   * Reset 3D tilt when mouse leaves the card
+   */
+  onMouseLeave(): void {
+    if (window.innerWidth <= 768) {
+      return;
+    }
+
+    if (!this.cardRef) {
+      return;
+    }
+
+    // Reset tilt to neutral position
+    this.gsapService.resetTilt3D(this.cardRef.nativeElement, 0.5);
   }
 }
