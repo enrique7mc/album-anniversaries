@@ -60,19 +60,19 @@
 .albums-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(2, 1fr); // Mobile
+  grid-template-columns: repeat(1, 1fr); // Mobile
 
   @media (min-width: 768px) {
-    grid-template-columns: repeat(3, 1fr); // Tablet
+    grid-template-columns: repeat(2, 1fr); // Tablet
   }
 
   @media (min-width: 1024px) {
-    grid-template-columns: repeat(4, 1fr); // Desktop
+    grid-template-columns: repeat(3, 1fr); // Desktop
     gap: 2rem;
   }
 
   @media (min-width: 1536px) {
-    grid-template-columns: repeat(5, 1fr); // Large screens
+    grid-template-columns: repeat(4, 1fr); // Large screens
   }
 }
 
