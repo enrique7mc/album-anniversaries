@@ -97,6 +97,15 @@ export class AlbumListItemComponent {
   }
 
   /**
+   * Open album in Spotify
+   */
+  openAlbum(): void {
+    if (this.album?.external_url) {
+      window.open(this.album.external_url, '_blank');
+    }
+  }
+
+  /**
    * Show overlay when mouse enters the card
    */
   onMouseEnter(): void {
@@ -111,6 +120,7 @@ export class AlbumListItemComponent {
   /**
    * Handle mouse move for 3D tilt effect
    * Calculates rotation based on mouse position relative to card center
+   * TODO: Find a way to make overlay buttons clickable without disabling 3D tilt
    */
   onMouseMove(event: MouseEvent): void {
     // Skip on mobile devices

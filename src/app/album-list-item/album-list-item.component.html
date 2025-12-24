@@ -1,6 +1,7 @@
 <div
   #cardWrapper
   class="card-3d-wrapper"
+  (click)="openAlbum()"
   (mouseenter)="onMouseEnter()"
   (mousemove)="onMouseMove($event)"
   (mouseleave)="onMouseLeave()"
@@ -28,20 +29,7 @@
         {{ album.release_date }}
       </p>
 
-      <!-- Queue Button -->
-      <button
-        (click)="addToQueue($event)"
-        [disabled]="isAddingToQueue"
-        class="queue-button"
-        [attr.aria-label]="'Add ' + album.name + ' to queue'"
-        title="Add to queue"
-      >
-        <lucide-icon
-          [name]="isAddingToQueue ? 'clock' : 'list-music'"
-          class="w-4 h-4"
-        ></lucide-icon>
-        <span>Queue</span>
-      </button>
+      <!-- TODO: Add queue button back once we figure out how to make it clickable with 3D transforms -->
     </div>
   </div>
 </div>
