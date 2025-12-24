@@ -104,44 +104,6 @@
 }
 
 // ============================================
-// QUEUE BUTTON
-// ============================================
-
-.queue-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Space Mono', monospace;
-  font-size: 0.875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent-primary, #5b8def);
-  background: transparent;
-  border: 1px solid var(--accent-primary, #5b8def);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover:not(:disabled) {
-    background: var(--accent-primary, #5b8def);
-    color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(91, 141, 239, 0.3);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
-// ============================================
 // CARD SHADOWS & HOVER EFFECTS
 // ============================================
 
@@ -183,11 +145,5 @@
 
   .album-date {
     font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .queue-button {
-    font-size: 0.75rem;
-    padding: 0.4rem 0.8rem;
   }
 }

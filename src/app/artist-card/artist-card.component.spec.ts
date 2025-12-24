@@ -51,18 +51,9 @@ describe('ArtistCardComponent', () => {
   };
 
   beforeEach(waitForAsync(() => {
-    const spotifyServiceSpy = jasmine.createSpyObj('SpotifyService', [
-      'addAlbumToQueue',
-    ]);
-    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
-
     TestBed.configureTestingModule({
       imports: [MaterialModule, HttpClientTestingModule],
       declarations: [ArtistCardComponent, AlbumListItemComponent],
-      providers: [
-        { provide: SpotifyService, useValue: spotifyServiceSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy },
-      ],
     }).compileComponents();
   }));
 
