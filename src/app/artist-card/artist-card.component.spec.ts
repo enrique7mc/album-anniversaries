@@ -2,10 +2,7 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ArtistCardComponent } from './artist-card.component';
-import { MaterialModule } from '../material/material.module';
-import { SpotifyService } from '../spotify.service';
 import { Artist } from '../artist';
 import { Image } from '../image';
 import { AlbumListItemComponent } from '../album-list-item/album-list-item.component';
@@ -52,7 +49,7 @@ describe('ArtistCardComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MaterialModule, HttpClientTestingModule],
+      imports: [HttpClientTestingModule],
       declarations: [ArtistCardComponent, AlbumListItemComponent],
     }).compileComponents();
   }));
