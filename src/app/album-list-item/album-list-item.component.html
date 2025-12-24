@@ -1,10 +1,11 @@
 <div
   #cardWrapper
   class="card-3d-wrapper"
+  (mouseenter)="onMouseEnter()"
   (mousemove)="onMouseMove($event)"
   (mouseleave)="onMouseLeave()"
 >
-  <div #card class="album-card group">
+  <div #card class="album-card group" [class.is-hovered]="showOverlay">
     <!-- Album Cover -->
     <div class="album-cover-container">
       <img

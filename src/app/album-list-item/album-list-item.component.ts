@@ -26,6 +26,7 @@ export class AlbumListItemComponent {
   @ViewChild('card') cardRef: ElementRef<HTMLElement>;
 
   isAddingToQueue: boolean = false;
+  showOverlay: boolean = false;
 
   constructor(
     private spotifyService: SpotifyService,
@@ -96,6 +97,18 @@ export class AlbumListItemComponent {
   }
 
   /**
+   * Show overlay when mouse enters the card
+   */
+  onMouseEnter(): void {
+    if (window.innerWidth <= 768) {
+      return;
+    }
+
+    this.showOverlay = true;
+    this.cdr.markForCheck();
+  }
+
+  /**
    * Handle mouse move for 3D tilt effect
    * Calculates rotation based on mouse position relative to card center
    */
@@ -128,12 +141,15 @@ export class AlbumListItemComponent {
   }
 
   /**
-   * Reset 3D tilt when mouse leaves the card
+   * Reset 3D tilt and hide overlay when mouse leaves the card
    */
   onMouseLeave(): void {
     if (window.innerWidth <= 768) {
       return;
     }
+
+    this.showOverlay = false;
+    this.cdr.markForCheck();
 
     if (!this.cardRef) {
       return;
