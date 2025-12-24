@@ -675,8 +675,12 @@ describe('SpotifyService', () => {
       });
 
       it('should return empty array when all albums are filtered out', () => {
+        // Create a date that's more than a year ago AND doesn't have an anniversary this month
+        // Using a date from 2 years ago in June (not December)
         const twoYearsAgo = new Date();
         twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+        twoYearsAgo.setMonth(5); // June
+        twoYearsAgo.setDate(15);
 
         const items = [
           createSpotifyAlbumResponse(

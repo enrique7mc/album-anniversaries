@@ -151,32 +151,20 @@ describe('ArtistCardComponent', () => {
   });
 
   describe('Template Rendering', () => {
-    it('should render artist name in card title', () => {
-      const titleElement = debugElement.query(By.css('mat-card-title'));
+    it('should render artist name in header', () => {
+      const titleElement = debugElement.query(By.css('h2'));
       expect(titleElement.nativeElement.textContent.trim()).toBe('Test Artist');
     });
 
-    it('should render artist image with correct src', () => {
-      const imageElement = debugElement.query(By.css('img[mat-card-image]'));
-      expect(imageElement.nativeElement.src).toBe(
-        'https://example.com/artist-large.jpg',
-      );
-    });
-
-    it('should render artist image with correct alt text', () => {
-      const imageElement = debugElement.query(By.css('img[mat-card-image]'));
-      expect(imageElement.nativeElement.alt).toBe('Test Artist photo');
-    });
-
     it('should render "View on Spotify" link with correct href', () => {
-      const linkElement = debugElement.query(By.css('a[mat-raised-button]'));
+      const linkElement = debugElement.query(By.css('a.btn-primary'));
       expect(linkElement.nativeElement.href).toBe(
         'https://open.spotify.com/artist/artist-123',
       );
     });
 
     it('should render "View on Spotify" link with target="_blank"', () => {
-      const linkElement = debugElement.query(By.css('a[mat-raised-button]'));
+      const linkElement = debugElement.query(By.css('a.btn-primary'));
       expect(linkElement.nativeElement.target).toBe('_blank');
     });
 
@@ -242,23 +230,9 @@ describe('ArtistCardComponent', () => {
       newComponent.artist = artistNoUrl;
       newFixture.detectChanges();
 
-      const linkElement = newFixture.nativeElement.querySelector(
-        'a[mat-raised-button]',
-      );
+      const linkElement =
+        newFixture.nativeElement.querySelector('a.btn-primary');
       expect(linkElement.getAttribute('href')).toBe('');
-    });
-
-    it('should display placeholder image when artist has no images', () => {
-      const newFixture = TestBed.createComponent(ArtistCardComponent);
-      const newComponent = newFixture.componentInstance;
-      const artistNoImages = { ...mockArtist, images: [] };
-      newComponent.artist = artistNoImages;
-      newFixture.detectChanges();
-
-      const imageElement = newFixture.nativeElement.querySelector(
-        'img[mat-card-image]',
-      );
-      expect(imageElement.src).toContain('placeholder.com');
     });
   });
 
@@ -292,9 +266,8 @@ describe('ArtistCardComponent', () => {
       newFixture.detectChanges();
 
       const newDebugElement = newFixture.debugElement;
-      const titleElement = newDebugElement.query(By.css('mat-card-title'));
-      const imageElement = newDebugElement.query(By.css('img[mat-card-image]'));
-      const linkElement = newDebugElement.query(By.css('a[mat-raised-button]'));
+      const titleElement = newDebugElement.query(By.css('h2'));
+      const linkElement = newDebugElement.query(By.css('a.btn-primary'));
       const albumElements = newDebugElement.queryAll(
         By.css('app-album-list-item'),
       );
@@ -302,29 +275,20 @@ describe('ArtistCardComponent', () => {
       expect(titleElement.nativeElement.textContent.trim()).toBe(
         'New Artist Name',
       );
-      expect(imageElement.nativeElement.src).toBe(
-        'https://example.com/new-large.jpg',
-      );
       expect(linkElement.nativeElement.href).toBe(
         'https://open.spotify.com/artist/new-artist',
       );
       expect(albumElements.length).toBe(1);
     });
 
-    it('should maintain Material Design card structure', () => {
-      const cardElement = debugElement.query(By.css('mat-card'));
-      const headerElement = debugElement.query(By.css('mat-card-header'));
-      const titleElement = debugElement.query(By.css('mat-card-title'));
-      const imageElement = debugElement.query(By.css('[mat-card-image]'));
-      const contentElement = debugElement.query(By.css('mat-card-content'));
-      const actionsElement = debugElement.query(By.css('mat-card-actions'));
+    it('should maintain card structure', () => {
+      const titleElement = debugElement.query(By.css('h2'));
+      const linkElement = debugElement.query(By.css('a.btn-primary'));
+      const gridElement = debugElement.query(By.css('.grid'));
 
-      expect(cardElement).toBeTruthy();
-      expect(headerElement).toBeTruthy();
       expect(titleElement).toBeTruthy();
-      expect(imageElement).toBeTruthy();
-      expect(contentElement).toBeTruthy();
-      expect(actionsElement).toBeTruthy();
+      expect(linkElement).toBeTruthy();
+      expect(gridElement).toBeTruthy();
     });
   });
 });

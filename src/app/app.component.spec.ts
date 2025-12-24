@@ -1,5 +1,6 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
@@ -24,6 +25,7 @@ describe('AppComponent', () => {
         PkceService,
       ],
       declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
   }));
 
