@@ -31,6 +31,10 @@ export class CustomCursorDirective implements OnInit, OnDestroy {
       return;
     }
 
+    // Initialize cursor position to center of screen
+    this.cursorX = window.innerWidth / 2;
+    this.cursorY = window.innerHeight / 2;
+
     this.createCursor();
     this.startCursorAnimation();
   }
@@ -43,6 +47,16 @@ export class CustomCursorDirective implements OnInit, OnDestroy {
     this.renderer.addClass(this.cursorElement, 'custom-cursor');
     this.renderer.appendChild(document.body, this.cursorElement);
     this.renderer.addClass(document.body, 'custom-cursor-active');
+
+    // Set initial position to avoid cursor appearing at (0,0)
+    this.renderer.setStyle(this.cursorElement, 'opacity', '0');
+
+    // Show cursor after a brief delay to ensure proper initialization
+    setTimeout(() => {
+      if (this.cursorElement) {
+        this.renderer.setStyle(this.cursorElement, 'opacity', '1');
+      }
+    }, 100);
   }
 
   /**
