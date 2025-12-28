@@ -27,7 +27,7 @@ const SPOTIFY_API_LIMIT = 50;
 // Spotify API Response Interfaces
 interface SpotifyImage {
   url: string;
-  heigth: number; // Note: Matches existing Image interface typo
+  height: number;
   width: number;
 }
 

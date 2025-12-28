@@ -13,9 +13,9 @@ describe('AlbumListItemComponent', () => {
   let debugElement: DebugElement;
 
   const mockImages: Image[] = [
-    { heigth: 640, width: 640, url: 'https://example.com/large.jpg' },
-    { heigth: 300, width: 300, url: 'https://example.com/medium.jpg' },
-    { heigth: 64, width: 64, url: 'https://example.com/small.jpg' },
+    { height: 640, width: 640, url: 'https://example.com/large.jpg' },
+    { height: 300, width: 300, url: 'https://example.com/medium.jpg' },
+    { height: 64, width: 64, url: 'https://example.com/small.jpg' },
   ];
 
   const mockAlbum: Album = {
@@ -202,13 +202,13 @@ describe('AlbumListItemComponent', () => {
         release_date: '2024-05-20',
         release_date_precision: 'day',
         images: [
-          { heigth: 640, width: 640, url: 'https://example.com/new-large.jpg' },
+          { height: 640, width: 640, url: 'https://example.com/new-large.jpg' },
           {
-            heigth: 300,
+            height: 300,
             width: 300,
             url: 'https://example.com/new-medium.jpg',
           },
-          { heigth: 64, width: 64, url: 'https://example.com/new-small.jpg' },
+          { height: 64, width: 64, url: 'https://example.com/new-small.jpg' },
         ],
         external_url: 'https://open.spotify.com/album/new',
       };

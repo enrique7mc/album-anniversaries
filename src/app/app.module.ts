@@ -5,7 +5,6 @@ import { AppComponent } from './app.component';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
 import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
-import { CustomCursorDirective } from './custom-cursor.directive';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
@@ -27,7 +26,6 @@ import {
     AppComponent,
     ArtistCardComponent,
     AlbumListItemComponent,
-    CustomCursorDirective,
   ],
   imports: [
     BrowserModule,

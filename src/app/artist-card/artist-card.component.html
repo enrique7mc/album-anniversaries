@@ -4,7 +4,12 @@
   <!-- Artist Header -->
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-xl font-display font-semibold">{{ artist.name }}</h2>
-    <a [href]="artist.external_url" target="_blank" class="btn-primary text-sm">
+    <a
+      [href]="artist.external_url"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn-primary text-sm"
+    >
       View on Spotify
     </a>
   </div>

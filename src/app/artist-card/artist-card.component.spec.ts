@@ -13,9 +13,9 @@ describe('ArtistCardComponent', () => {
   let debugElement: DebugElement;
 
   const mockImages: Image[] = [
-    { heigth: 640, width: 640, url: 'https://example.com/artist-large.jpg' },
-    { heigth: 300, width: 300, url: 'https://example.com/artist-medium.jpg' },
-    { heigth: 64, width: 64, url: 'https://example.com/artist-small.jpg' },
+    { height: 640, width: 640, url: 'https://example.com/artist-large.jpg' },
+    { height: 300, width: 300, url: 'https://example.com/artist-medium.jpg' },
+    { height: 64, width: 64, url: 'https://example.com/artist-small.jpg' },
   ];
 
   const mockArtist: Artist = {
@@ -244,7 +244,7 @@ describe('ArtistCardComponent', () => {
         name: 'New Artist Name',
         popularity: 85,
         images: [
-          { heigth: 640, width: 640, url: 'https://example.com/new-large.jpg' },
+          { height: 640, width: 640, url: 'https://example.com/new-large.jpg' },
         ],
         external_url: 'https://open.spotify.com/artist/new-artist',
         albums: [

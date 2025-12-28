@@ -56,7 +56,12 @@
         </div>
 
         <!-- Logout button -->
-        <button *ngIf="accessToken" (click)="logout()" class="btn-icon">
+        <button
+          *ngIf="accessToken"
+          (click)="logout()"
+          class="btn-icon"
+          aria-label="Logout"
+        >
           <lucide-icon name="log-out" class="w-5 h-5"></lucide-icon>
         </button>
       </div>
@@ -110,7 +115,7 @@
 
       <!-- CTA Button -->
       <div class="flex justify-center pt-6">
-        <button (click)="login()" class="hero-cta group">
+        <button type="button" (click)="login()" class="hero-cta group">
           <span class="relative z-10 flex items-center gap-3">
             <lucide-icon name="music" class="w-6 h-6"></lucide-icon>
             <span class="font-semibold tracking-wide"

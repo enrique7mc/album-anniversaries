@@ -1,7 +1,11 @@
 <div
   #cardWrapper
   class="card-3d-wrapper"
+  role="button"
+  tabindex="0"
   (click)="openAlbum()"
+  (keydown.enter)="openAlbum()"
+  (keydown.space)="openAlbum(); $event.preventDefault()"
   (mouseenter)="onMouseEnter()"
   (mousemove)="onMouseMove($event)"
   (mouseleave)="onMouseLeave()"
