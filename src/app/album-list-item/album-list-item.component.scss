@@ -24,6 +24,7 @@
   border-radius: 8px;
   overflow: hidden;
   background: var(--bg-secondary, #12182b);
+  z-index: 30;
 }
 
 // ============================================
@@ -68,7 +69,7 @@
   transform: translateY(100%) translateZ(50px);
   opacity: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
+  z-index: 30;
   pointer-events: auto;
 }
 

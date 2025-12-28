@@ -35,6 +35,8 @@
   margin-bottom: 3rem;
   text-align: center;
   color: var(--text-primary, #e8edf5);
+  position: relative;
+  z-index: 10;
 }
 
 .artist-section {
@@ -48,7 +50,7 @@
   text-transform: uppercase;
   position: sticky;
   top: 64px; // Height of page header
-  z-index: 40;
+  z-index: 20;
   background: rgba(18, 24, 43, 0.95);
   backdrop-filter: blur(10px);
   padding: 1.5rem 2rem;

@@ -197,7 +197,7 @@
   <button
     *ngIf="showScrollToTop && accessToken"
     (click)="scrollToTop()"
-    class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-accent-primary hover:bg-accent-hover shadow-glow hover:shadow-lg-dark transition-all duration-250 hover:-translate-y-1 flex items-center justify-center animate-fade-in"
+    class="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-accent-primary hover:bg-accent-hover shadow-glow hover:shadow-lg-dark transition-all duration-250 hover:-translate-y-1 flex items-center justify-center animate-fade-in z-50"
     aria-label="Scroll to top"
   >
     <lucide-icon name="arrow-up" class="w-6 h-6 text-white"></lucide-icon>
