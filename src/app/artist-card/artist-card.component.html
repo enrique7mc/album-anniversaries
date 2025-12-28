@@ -1,24 +1,24 @@
-<mat-card class="card">
-  <mat-card-header>
-    <mat-card-title>{{ artist.name }}</mat-card-title>
-  </mat-card-header>
-  <img mat-card-image [src]="artistImageUrl" [alt]="altTag" />
-  <mat-card-content>
-    <mat-nav-list>
-      <app-album-list-item
-        *ngFor="let album of artist.albums"
-        [album]="album"
-      ></app-album-list-item>
-    </mat-nav-list>
-  </mat-card-content>
-  <mat-card-actions>
+<div
+  class="bg-bg-secondary rounded-lg shadow-md-dark p-6 hover:shadow-lg-dark transition-shadow duration-250"
+>
+  <!-- Artist Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-display font-semibold">{{ artist.name }}</h2>
     <a
-      mat-raised-button
-      color="primary"
       [href]="artist.external_url"
       target="_blank"
+      rel="noopener noreferrer"
+      class="btn-primary text-sm"
     >
-      <span>View on Spotify</span>
+      View on Spotify
     </a>
-  </mat-card-actions>
-</mat-card>
+  </div>
+
+  <!-- Album Grid - Larger images with fewer columns -->
+  <div
+    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-2 gap-5"
+  >
+    <app-album-list-item *ngFor="let album of artist.albums" [album]="album">
+    </app-album-list-item>
+  </div>
+</div>

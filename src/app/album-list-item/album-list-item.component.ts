@@ -3,11 +3,11 @@ import {
   ChangeDetectionStrategy,
   Input,
   ChangeDetectorRef,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Album } from '../album';
-import { SpotifyService } from '../spotify.service';
-import { accessTokenKey } from '../constants';
+import { GsapService } from '../gsap.service';
 
 @Component({
   selector: 'app-album-list-item',
@@ -19,12 +19,14 @@ export class AlbumListItemComponent {
   @Input()
   album: Album;
 
-  isAddingToQueue: boolean = false;
+  @ViewChild('cardWrapper') wrapperRef: ElementRef<HTMLElement>;
+  @ViewChild('card') cardRef: ElementRef<HTMLElement>;
+
+  showOverlay: boolean = false;
 
   constructor(
-    private spotifyService: SpotifyService,
-    private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
+    private gsapService: GsapService,
   ) {}
 
   get altTag(): string {
@@ -35,65 +37,84 @@ export class AlbumListItemComponent {
   }
 
   get albumCoverUrl(): string {
-    const thumbnail =
-      this.album.images && this.album.images.length > 2
-        ? this.album.images[2]
+    // Use the largest image (images[0]) for better quality in grid layout
+    const image =
+      this.album.images && this.album.images.length > 0
+        ? this.album.images[0]
         : null;
-    return thumbnail != null ? thumbnail.url : 'https://via.placeholder.com/40';
+    return image != null ? image.url : 'https://via.placeholder.com/300';
   }
 
   /**
-   * Adds the album to the user's Spotify queue
+   * Open album in Spotify
    */
-  addToQueue(event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
+  openAlbum(): void {
+    if (this.album?.external_url) {
+      window.open(this.album.external_url, '_blank');
+    }
+  }
 
-    if (this.isAddingToQueue) {
+  /**
+   * Show overlay when mouse enters the card
+   */
+  onMouseEnter(): void {
+    if (window.innerWidth <= 768) {
       return;
     }
 
-    const accessToken = localStorage.getItem(accessTokenKey);
-    if (!accessToken) {
-      this.snackBar.open(
-        'Please log in to Spotify to add albums to your queue',
-        'Close',
-        {
-          duration: 3000,
-        },
-      );
+    this.showOverlay = true;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Handle mouse move for 3D tilt effect
+   * Calculates rotation based on mouse position relative to card center
+   * TODO: Find a way to make overlay buttons clickable without disabling 3D tilt
+   */
+  onMouseMove(event: MouseEvent): void {
+    // Skip on mobile devices
+    if (window.innerWidth <= 768) {
       return;
     }
 
-    this.isAddingToQueue = true;
+    if (!this.wrapperRef || !this.cardRef) {
+      return;
+    }
+
+    const wrapper = this.wrapperRef.nativeElement;
+    const card = this.cardRef.nativeElement;
+    const rect = wrapper.getBoundingClientRect();
+
+    // Get mouse position relative to card
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Calculate rotation (max 15 degrees)
+    const rotateY = ((x - centerX) / centerX) * 15;
+    const rotateX = ((centerY - y) / centerY) * 15;
+
+    // Apply tilt using GSAP
+    this.gsapService.tilt3D(card, rotateX, rotateY, 0.3);
+  }
+
+  /**
+   * Reset 3D tilt and hide overlay when mouse leaves the card
+   */
+  onMouseLeave(): void {
+    if (window.innerWidth <= 768) {
+      return;
+    }
+
+    this.showOverlay = false;
     this.cdr.markForCheck();
 
-    this.spotifyService.addAlbumToQueue(accessToken, this.album.id).subscribe({
-      next: () => {
-        this.isAddingToQueue = false;
-        this.cdr.markForCheck();
-        this.snackBar.open(`"${this.album.name}" added to queue`, 'Close', {
-          duration: 3000,
-        });
-      },
-      error: (error) => {
-        this.isAddingToQueue = false;
-        this.cdr.markForCheck();
-        console.error('Error adding album to queue:', error);
+    if (!this.cardRef) {
+      return;
+    }
 
-        let errorMessage = 'Failed to add album to queue';
-        if (error.status === 404) {
-          errorMessage =
-            'No active Spotify device found. Please start playing music on Spotify first.';
-        } else if (error.status === 403) {
-          errorMessage =
-            'Permission denied. Please make sure you have granted queue permissions.';
-        }
-
-        this.snackBar.open(errorMessage, 'Close', {
-          duration: 5000,
-        });
-      },
-    });
+    // Reset tilt to neutral position
+    this.gsapService.resetTilt3D(this.cardRef.nativeElement, 0.5);
   }
 }

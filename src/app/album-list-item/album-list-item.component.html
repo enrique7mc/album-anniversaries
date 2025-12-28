@@ -1,17 +1,37 @@
-<div mat-list-item class="album-list-item-container">
-  <img class="avatar" matListItemAvatar [src]="albumCoverUrl" [alt]="altTag" />
-  <a [href]="album.external_url" target="_blank" class="album-link">
-    <div matListItemTitle>{{ album.name }}</div>
-    <div matListItemLine>{{ album.release_date }}</div>
-  </a>
-  <button
-    mat-icon-button
-    [disabled]="isAddingToQueue"
-    (click)="addToQueue($event)"
-    class="queue-button"
-    [attr.aria-label]="'Add ' + album.name + ' to queue'"
-    title="Add to queue"
-  >
-    <mat-icon>{{ isAddingToQueue ? 'hourglass_empty' : 'queue_music' }}</mat-icon>
-  </button>
+<div
+  #cardWrapper
+  class="card-3d-wrapper"
+  role="button"
+  tabindex="0"
+  (click)="openAlbum()"
+  (keydown.enter)="openAlbum()"
+  (keydown.space)="openAlbum(); $event.preventDefault()"
+  (mouseenter)="onMouseEnter()"
+  (mousemove)="onMouseMove($event)"
+  (mouseleave)="onMouseLeave()"
+>
+  <div #card class="album-card group" [class.is-hovered]="showOverlay">
+    <!-- Album Cover -->
+    <div class="album-cover-container">
+      <img
+        [src]="albumCoverUrl"
+        [alt]="altTag"
+        class="album-cover"
+        loading="lazy"
+      />
+    </div>
+
+    <!-- Hover Overlay with Details -->
+    <div class="album-info-overlay">
+      <!-- Album Name -->
+      <h3 class="album-name">
+        {{ album.name }}
+      </h3>
+
+      <!-- Release Date -->
+      <p class="album-date">
+        {{ album.release_date }}
+      </p>
+    </div>
+  </div>
 </div>

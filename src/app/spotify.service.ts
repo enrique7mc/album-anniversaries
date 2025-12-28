@@ -9,8 +9,6 @@ import {
   bufferCount,
   switchMap,
   catchError,
-  concatMap,
-  delay,
 } from 'rxjs/operators';
 import { artistsLocalUrl } from './constants';
 import { Artist } from './artist';
@@ -29,7 +27,7 @@ const SPOTIFY_API_LIMIT = 50;
 // Spotify API Response Interfaces
 interface SpotifyImage {
   url: string;
-  heigth: number; // Note: Matches existing Image interface typo
+  height: number;
   width: number;
 }
 
@@ -65,18 +63,6 @@ interface SpotifyAlbumsListResponse {
 
 interface AlbumWithArtistId extends SpotifyAlbumResponse {
   artist_id: string;
-}
-
-interface SpotifyTrack {
-  id: string;
-  uri: string;
-  name: string;
-}
-
-interface SpotifyAlbumTracksResponse {
-  items: SpotifyTrack[];
-  next: string | null;
-  total: number;
 }
 
 @Injectable({
@@ -381,74 +367,5 @@ export class SpotifyService {
     const dateDiffMillis = today.getTime() - albumDate.getTime();
 
     return dateDiffMillis > 0 && dateDiffMillis < MILLISECONDS_IN_MONTH;
-  }
-
-  /**
-   * Fetches all tracks from an album
-   * @param accessToken - Spotify access token
-   * @param albumId - Spotify album ID
-   * @returns Observable that emits an array of track URIs
-   */
-  getAlbumTracks(accessToken: string, albumId: string): Observable<string[]> {
-    const httpOptions = this.createAuthHeaders(accessToken);
-    const url = `https://api.spotify.com/v1/albums/${albumId}/tracks?limit=50`;
-
-    return this.http.get<SpotifyAlbumTracksResponse>(url, httpOptions).pipe(
-      map((response) => response.items.map((track) => track.uri)),
-      catchError((error) => {
-        console.error(
-          `[SpotifyService] Error fetching tracks for album ${albumId}:`,
-          error,
-        );
-        throw error;
-      }),
-    );
-  }
-
-  /**
-   * Adds all tracks from an album to the user's Spotify queue
-   * @param accessToken - Spotify access token
-   * @param albumId - Spotify album ID
-   * @returns Observable that completes when all tracks are queued
-   */
-  addAlbumToQueue(accessToken: string, albumId: string): Observable<void> {
-    const httpOptions = this.createAuthHeaders(accessToken);
-
-    return this.getAlbumTracks(accessToken, albumId).pipe(
-      switchMap((trackUris) => {
-        if (trackUris.length === 0) {
-          return of(undefined);
-        }
-
-        // Process tracks sequentially with a small delay to avoid rate limits
-        return from(trackUris).pipe(
-          concatMap((trackUri, index) => {
-            const url = `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(
-              trackUri,
-            )}`;
-            // Spotify returns plain text (not JSON) for this endpoint, so use 'text' responseType
-            const requestOptions = {
-              ...httpOptions,
-              responseType: 'text' as const,
-            };
-            // Add a small delay before each request (50ms) except for the first one
-            return index === 0
-              ? this.http.post(url, {}, requestOptions)
-              : of(null).pipe(
-                  delay(50),
-                  switchMap(() => this.http.post(url, {}, requestOptions)),
-                );
-          }),
-          catchError((error) => {
-            console.error(
-              `[SpotifyService] Error adding album ${albumId} to queue:`,
-              error,
-            );
-            throw error;
-          }),
-        );
-      }),
-      map(() => undefined),
-    );
   }
 }

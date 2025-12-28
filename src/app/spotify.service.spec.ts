@@ -675,8 +675,12 @@ describe('SpotifyService', () => {
       });
 
       it('should return empty array when all albums are filtered out', () => {
+        // Create a date that's more than a year ago AND doesn't have an anniversary this month
+        // Using a date from 2 years ago in June (not December)
         const twoYearsAgo = new Date();
         twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+        twoYearsAgo.setMonth(5); // June
+        twoYearsAgo.setDate(15);
 
         const items = [
           createSpotifyAlbumResponse(
@@ -736,7 +740,7 @@ describe('SpotifyService', () => {
             release_date: dateStr,
             release_date_precision: 'day',
             images: [
-              { url: 'http://example.com/image.jpg', heigth: 640, width: 640 },
+              { url: 'http://example.com/image.jpg', height: 640, width: 640 },
             ],
             external_urls: { spotify: 'https://open.spotify.com/album/xyz' },
           },
@@ -753,7 +757,7 @@ describe('SpotifyService', () => {
         expect(result[0].release_date).toBe(dateStr);
         expect(result[0].release_date_precision).toBe('day');
         expect(result[0].images).toEqual([
-          { url: 'http://example.com/image.jpg', heigth: 640, width: 640 },
+          { url: 'http://example.com/image.jpg', height: 640, width: 640 },
         ]);
         expect(result[0].external_url).toBe(
           'https://open.spotify.com/album/xyz',

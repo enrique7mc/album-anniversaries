@@ -1,13 +1,12 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
-import { MaterialModule } from './material/material.module';
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
 import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
 import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
-import { ThemeSwitcherComponent } from './theme-switcher/theme-switcher.component';
 import { Functions } from '@angular/fire/functions';
 
 describe('AppComponent', () => {
@@ -18,19 +17,15 @@ describe('AppComponent', () => {
     const functionsSpy = {};
 
     TestBed.configureTestingModule({
-      imports: [MaterialModule, HttpClientTestingModule],
+      imports: [HttpClientTestingModule],
       providers: [
         { provide: SpotifyService, useValue: spy },
         { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG },
         { provide: Functions, useValue: functionsSpy },
         PkceService,
       ],
-      declarations: [
-        AppComponent,
-        ArtistCardComponent,
-        AlbumListItemComponent,
-        ThemeSwitcherComponent,
-      ],
+      declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
   }));
 
