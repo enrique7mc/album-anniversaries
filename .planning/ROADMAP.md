@@ -44,7 +44,11 @@ Plans:
 - Apple Developer Program enrollment ($99/year)
 - MusicKit credentials (Team ID, Key ID, private key)
 
-**Plans:** (created during /gsd:plan-phase)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Upgrade Firebase Functions to v2, implement getAppleMusicToken callable
+- [ ] 02-02-PLAN.md — Configure Apple credentials, validate token against Apple Music API
 
 ---
 
@@ -94,7 +98,7 @@ Plans:
 | Phase | Status | Plans | Requirements |
 |-------|--------|-------|--------------|
 | 1 - Service Abstraction & UI Foundation | ● Complete | 3/3 | 3 |
-| 2 - Backend Infrastructure | ○ Pending | 0/0 | 1 |
+| 2 - Backend Infrastructure | ○ Pending | 0/2 | 1 |
 | 3 - Apple Music Integration | ○ Pending | 0/0 | 5 |
 | 4 - Production Validation | ○ Pending | 0/0 | 0 (validation) |
 
@@ -138,4 +142,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-02-01 (Phase 1 complete)*
+*Last updated: 2026-02-01 (Phase 2 planned)*
