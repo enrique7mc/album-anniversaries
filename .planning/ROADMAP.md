@@ -20,7 +20,12 @@
 
 **Dependencies:** None (refactoring existing working code)
 
-**Plans:** (created during /gsd:plan-phase)
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Create MusicService interface & token, refactor SpotifyService
+- [ ] 01-02-PLAN.md — Wire MUSIC_SERVICE in module, refactor AppComponent injection
+- [ ] 01-03-PLAN.md — Add dual sign-in buttons to landing page UI
 
 ---
 
@@ -88,7 +93,7 @@
 
 | Phase | Status | Plans | Requirements |
 |-------|--------|-------|--------------|
-| 1 - Service Abstraction & UI Foundation | ○ Pending | 0/0 | 3 |
+| 1 - Service Abstraction & UI Foundation | ◐ In Progress | 0/3 | 3 |
 | 2 - Backend Infrastructure | ○ Pending | 0/0 | 1 |
 | 3 - Apple Music Integration | ○ Pending | 0/0 | 5 |
 | 4 - Production Validation | ○ Pending | 0/0 | 0 (validation) |
@@ -111,7 +116,7 @@
 | DATA-02 | 3 | Fetch albums for each artist from catalog |
 | DATA-03 | 3 | Map Apple Music responses to shared models |
 
-**Coverage:** 9/9 requirements mapped ✓
+**Coverage:** 9/9 requirements mapped
 
 ---
 
