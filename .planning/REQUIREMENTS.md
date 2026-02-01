@@ -9,8 +9,8 @@ Requirements for Apple Music integration. Each maps to roadmap phases.
 
 ### Service Abstraction
 
-- [ ] **ABST-01**: App defines MusicService interface with common contract (getTopArtists, getAlbumsForArtist, etc.)
-- [ ] **ABST-02**: SpotifyService refactored to implement MusicService interface
+- [x] **ABST-01**: App defines MusicService interface with common contract (getTopArtists, getAlbumsForArtist, etc.)
+- [x] **ABST-02**: SpotifyService refactored to implement MusicService interface
 
 ### Authentication
 
@@ -26,7 +26,7 @@ Requirements for Apple Music integration. Each maps to roadmap phases.
 
 ### User Interface
 
-- [ ] **UI-01**: Landing page displays two sign-in buttons (Spotify / Apple Music)
+- [x] **UI-01**: Landing page displays two sign-in buttons (Spotify / Apple Music)
 
 ## v2 Requirements
 
@@ -62,9 +62,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ABST-01 | Phase 1 | Pending |
-| ABST-02 | Phase 1 | Pending |
-| UI-01 | Phase 1 | Pending |
+| ABST-01 | Phase 1 | Complete |
+| ABST-02 | Phase 1 | Complete |
+| UI-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-01 | Phase 3 | Pending |
 | AUTH-03 | Phase 3 | Pending |
@@ -85,4 +85,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-02-01 after roadmap creation*
+*Last updated: 2026-02-01 (Phase 1 complete: ABST-01, ABST-02, UI-01)*
