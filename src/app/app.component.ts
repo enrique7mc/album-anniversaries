@@ -11,6 +11,7 @@ import {
   QueryList,
   NgZone,
   ChangeDetectorRef,
+  Inject,
 } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
@@ -28,8 +29,9 @@ import { GsapService } from './gsap.service';
 import { Observable } from 'rxjs';
 import { Artist } from './artist';
 import { Album } from './album';
-import { Inject } from '@angular/core';
 import { APP_CONFIG, AppConfig } from './app-config';
+import { MUSIC_SERVICE } from './services/music-service.token';
+import { MusicService } from './services/music-service.interface';
 import {
   Subscription,
   Subject,
@@ -88,7 +90,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private fn: Functions = inject(Functions);
 
   constructor(
-    private spotifyService: SpotifyService,
+    @Inject(MUSIC_SERVICE) private musicService: MusicService,
     private pkceService: PkceService,
     private http: HttpClient,
     private ngZone: NgZone,
@@ -126,13 +128,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.accessToken) {
       this.loading = true;
-      const doneLoading$ = this.spotifyService.loadArtistsWithAlbums(
+      const doneLoading$ = this.musicService.loadArtistsWithAlbums(
         this.accessToken,
       );
 
       // TODO(me): figure out a better way to do the subscription logic.
       this.artistsWithRecentAlbums$ = (
-        this.spotifyService.artists as Observable<Artist[]>
+        this.musicService.artists as Observable<Artist[]>
       ).pipe(
         map((artists) => artists.map((a) => Object.assign({}, a))),
         map((artists) =>
@@ -148,7 +150,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Anniversary range-aware filtering for week/month selection
       this.artists$ = combineLatest([
-        this.spotifyService.artists as Observable<Artist[]>,
+        this.musicService.artists as Observable<Artist[]>,
         this.anniversaryRange$,
       ]).pipe(
         map(([artists, range]) => {
