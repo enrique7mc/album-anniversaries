@@ -79,6 +79,94 @@
 }
 
 // ============================================
+// DUAL SIGN-IN BUTTONS
+// ============================================
+
+// Dual sign-in buttons container
+.sign-in-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}
+
+// Sign-in button base styles
+.sign-in-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 260px;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 640px) {
+    width: 100%;
+    min-width: unset;
+  }
+
+  &:hover:not([disabled]) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+  }
+
+  // Spotify variant - Official green #1DB954
+  &.spotify {
+    background: linear-gradient(135deg, #1db954 0%, #1ed760 100%);
+    border-color: rgba(29, 185, 84, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #1ed760 0%, #1db954 100%);
+      border-color: rgba(29, 185, 84, 0.6);
+      box-shadow: 0 8px 24px rgba(29, 185, 84, 0.4);
+    }
+  }
+
+  // Apple Music variant - Red/Pink gradient
+  &.apple-music {
+    background: linear-gradient(135deg, #fa233b 0%, #fb5c74 100%);
+    border-color: rgba(250, 35, 59, 0.3);
+
+    &:hover:not([disabled]) {
+      background: linear-gradient(135deg, #fb5c74 0%, #fa233b 100%);
+      border-color: rgba(250, 35, 59, 0.6);
+      box-shadow: 0 8px 24px rgba(250, 35, 59, 0.4);
+    }
+
+    // Disabled state for "Coming Soon"
+    &[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      filter: grayscale(20%);
+
+      &:hover {
+        transform: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+    }
+  }
+}
+
+// ============================================
 // HERO LOGIN PAGE STYLES
 // ============================================
 
