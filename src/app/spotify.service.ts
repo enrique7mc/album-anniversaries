@@ -14,6 +14,7 @@ import { artistsLocalUrl } from './constants';
 import { Artist } from './artist';
 import { Album } from './album';
 import { AppConfig, APP_CONFIG } from './app-config';
+import { MusicService } from './services/music-service.interface';
 
 // Constants for magic numbers
 const MILLISECONDS_IN_WEEK = 604800000;
@@ -68,7 +69,7 @@ interface AlbumWithArtistId extends SpotifyAlbumResponse {
 @Injectable({
   providedIn: 'root',
 })
-export class SpotifyService {
+export class SpotifyService implements MusicService {
   private isDev: boolean;
   private _artists: BehaviorSubject<Artist[]>;
   private dataStore: {
