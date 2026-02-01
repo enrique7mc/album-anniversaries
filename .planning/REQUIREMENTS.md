@@ -62,21 +62,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ABST-01 | TBD | Pending |
-| ABST-02 | TBD | Pending |
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| DATA-01 | TBD | Pending |
-| DATA-02 | TBD | Pending |
-| DATA-03 | TBD | Pending |
-| UI-01 | TBD | Pending |
+| ABST-01 | Phase 1 | Pending |
+| ABST-02 | Phase 1 | Pending |
+| UI-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Pending |
+| DATA-01 | Phase 3 | Pending |
+| DATA-02 | Phase 3 | Pending |
+| DATA-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 9 total
-- Mapped to phases: 0
-- Unmapped: 9 ⚠️
+- Mapped to phases: 9 ✓
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 1 (Service Abstraction & UI Foundation): 3 requirements
+- Phase 2 (Backend Infrastructure): 1 requirement
+- Phase 3 (Apple Music Integration): 5 requirements
+- Phase 4 (Production Validation): 0 requirements (validation phase)
 
 ---
 *Requirements defined: 2026-01-31*
-*Last updated: 2026-01-31 after initial definition*
+*Last updated: 2026-02-01 after roadmap creation*
