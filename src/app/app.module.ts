@@ -8,6 +8,8 @@ import { AlbumListItemComponent } from './album-list-item/album-list-item.compon
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
+import { MUSIC_SERVICE } from './services/music-service.token';
+import { SpotifyService } from './spotify.service';
 import {
   LucideAngularModule,
   Disc,
@@ -22,11 +24,7 @@ import {
 } from 'lucide-angular';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    ArtistCardComponent,
-    AlbumListItemComponent,
-  ],
+  declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
   imports: [
     BrowserModule,
     HttpClientModule,
@@ -46,6 +44,12 @@ import {
     { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG },
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFunctions(() => getFunctions()),
+    SpotifyService,
+    {
+      provide: MUSIC_SERVICE,
+      useFactory: (spotifyService: SpotifyService) => spotifyService,
+      deps: [SpotifyService],
+    },
   ],
   bootstrap: [AppComponent],
 })
