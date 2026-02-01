@@ -1,17 +1,16 @@
 {
   "hosting": {
     "public": "dist/spotify-demo",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**",
-      "**/assets/**"
-    ],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "**/assets/**"],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
     ]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
   }
 }
