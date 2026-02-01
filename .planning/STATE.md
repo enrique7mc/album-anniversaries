@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-01
 **Current phase:** 1 of 4 (Service Abstraction & UI Foundation)
-**Status:** In progress
+**Status:** Phase 1 Complete
 
 ---
 
@@ -12,7 +12,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 **Core value:** Users can celebrate album anniversaries for music they actually listen to — regardless of whether they use Spotify or Apple Music.
 
-**Current focus:** Phase 1 - Service Abstraction & UI Foundation
+**Current focus:** Phase 1 Complete - Ready for Phase 2
 
 **Milestone:** Apple Music Integration (4 phases total)
 
@@ -20,14 +20,14 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 ## Current Position
 
-**Phase:** 1 of 4 (Service Abstraction & UI Foundation)
-**Plan:** 2 of 3 complete (01-01, 01-03)
-**Status:** In progress - Plan 01-03 complete, Plan 01-02 pending
+**Phase:** 1 of 4 (Service Abstraction & UI Foundation) - COMPLETE
+**Plan:** 3 of 3 complete (01-01, 01-02, 01-03)
+**Status:** Phase 1 complete - Ready for Phase 2
 
 ### Progress Bar
 ```
-[██○○] 17% (2/12 plans across 4 phases)
-Phase 1: [██░] 2/3 plans (01-02 pending)
+[███○] 25% (3/12 plans across 4 phases)
+Phase 1: [███] 3/3 plans - COMPLETE
 Phase 2: ○ Pending
 Phase 3: ○ Pending
 Phase 4: ○ Pending
@@ -37,13 +37,14 @@ Phase 4: ○ Pending
 
 ## Performance Metrics
 
-**Phases completed:** 0 / 4
-**Requirements completed:** 0 / 9
-**Plans executed:** 2 / 12
+**Phases completed:** 1 / 4
+**Requirements completed:** 3 / 9 (ABST-01, ABST-02, UI-01)
+**Plans executed:** 3 / 12
 
 **Plan 01-01 duration:** 2 min
+**Plan 01-02 duration:** 2 min
 **Plan 01-03 duration:** 3 min
-**Velocity:** 2.5 min/plan (sample size: 2)
+**Velocity:** 2.3 min/plan (sample size: 3)
 **Estimated completion:** TBD
 
 ---
@@ -51,6 +52,15 @@ Phase 4: ○ Pending
 ## Accumulated Context
 
 ### Decisions
+
+**2026-02-01: Factory provider pattern for MUSIC_SERVICE**
+- Using `useFactory` with deps enables future runtime switching between providers
+- Factory currently returns SpotifyService, will support AppleMusicService selection
+
+**2026-02-01: Static methods on concrete class**
+- Static utility methods (albumHadBirthdayPastWeek, etc.) stay on SpotifyService
+- Not part of MusicService interface - they are pure date utility functions
+- AppComponent imports SpotifyService for static access, injects MUSIC_SERVICE for instance methods
 
 **2026-02-01: Minimal MusicService interface**
 - Only includes `artists` Observable and `loadArtistsWithAlbums` method
@@ -98,12 +108,14 @@ Phase 4: ○ Pending
 
 ### Active Blockers
 
-None currently. Ready to proceed with Plan 01-02.
+**Phase 2 requires Apple Developer Program enrollment ($99/year)**
+- Need Team ID, Key ID, and .p8 private key for MusicKit JWT signing
+- Cannot proceed with backend infrastructure until credentials obtained
 
 ### Todos
 
 - [x] Execute Plan 01-01 (MusicService interface)
-- [ ] Execute Plan 01-02 (provider selection in app.component)
+- [x] Execute Plan 01-02 (provider wiring in app.module/app.component)
 - [x] Execute Plan 01-03 (landing page UI)
 - [ ] Enroll in Apple Developer Program before Phase 2
 - [ ] Obtain MusicKit credentials (Team ID, Key ID, .p8 key) before Phase 2
@@ -113,6 +125,13 @@ None currently. Ready to proceed with Plan 01-02.
 ---
 
 ## Recent Activity
+
+**2026-02-01:** Completed Plan 01-02 (MUSIC_SERVICE Provider Wiring)
+- Configured MUSIC_SERVICE factory provider in app.module.ts
+- Refactored AppComponent to inject MUSIC_SERVICE token
+- Updated test configuration to match app.module provider setup
+- All 124 tests passing
+- Duration: 2 min
 
 **2026-02-01:** Completed Plan 01-03 (Dual Sign-in UI)
 - Added dual sign-in buttons (Spotify and Apple Music) to landing page
@@ -150,29 +169,32 @@ None currently. Ready to proceed with Plan 01-02.
 ## Session Continuity
 
 **Last session:** 2026-02-01
-**Stopped at:** Completed Plan 01-03-PLAN.md
+**Stopped at:** Completed Plan 01-02-PLAN.md - Phase 1 Complete
 **Resume file:** None
 
 **For next session:**
-1. Execute Plan 01-02 (Provider selection in app.component) - last remaining Phase 1 plan
-2. Phase 1 success criteria: Landing page visible, all tests passing, Spotify functionality unchanged
+1. Phase 1 complete - all 3 plans executed successfully
+2. Before Phase 2: User must enroll in Apple Developer Program and obtain MusicKit credentials
+3. Phase 2 focuses on backend infrastructure for JWT token generation
 
 **Context to preserve:**
-- MusicService interface is now defined with minimal contract
-- MUSIC_SERVICE InjectionToken ready for factory provider configuration
-- SpotifyService implements MusicService - ready for provider abstraction
-- Dual sign-in UI complete with Spotify/Apple Music buttons
+- Phase 1 service abstraction complete
+- MUSIC_SERVICE token wired with factory provider pattern
+- AppComponent uses interface-based injection
+- Dual sign-in UI ready with Spotify active, Apple Music disabled
+- All 124 tests passing, Spotify functionality unchanged
 - Quick depth = 3-5 phases, critical path only
 - Phase 2 requires Apple Developer enrollment first ($99/year)
 
 **Files to reference:**
 - `.planning/phases/01-service-abstraction-ui-foundation/01-01-SUMMARY.md` - MusicService interface summary
+- `.planning/phases/01-service-abstraction-ui-foundation/01-02-SUMMARY.md` - Provider wiring summary
 - `.planning/phases/01-service-abstraction-ui-foundation/01-03-SUMMARY.md` - Dual sign-in UI summary
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 - `src/app/services/music-service.interface.ts` - MusicService contract
 - `src/app/services/music-service.token.ts` - MUSIC_SERVICE InjectionToken
-- `src/app/app.component.html` - Dual sign-in button markup
-- `src/app/app.component.scss` - Brand color styling
+- `src/app/app.module.ts` - Factory provider configuration
+- `src/app/app.component.ts` - Token injection pattern
 
 ---
 
