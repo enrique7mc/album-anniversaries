@@ -8,6 +8,7 @@ import { APP_CONFIG, SPOTIFY_APP_CONFIG } from './app-config';
 import { ArtistCardComponent } from './artist-card/artist-card.component';
 import { AlbumListItemComponent } from './album-list-item/album-list-item.component';
 import { Functions } from '@angular/fire/functions';
+import { MUSIC_SERVICE } from './services/music-service.token';
 
 describe('AppComponent', () => {
   beforeEach(waitForAsync(() => {
@@ -23,6 +24,11 @@ describe('AppComponent', () => {
         { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG },
         { provide: Functions, useValue: functionsSpy },
         PkceService,
+        {
+          provide: MUSIC_SERVICE,
+          useFactory: (spotifyService: SpotifyService) => spotifyService,
+          deps: [SpotifyService],
+        },
       ],
       declarations: [AppComponent, ArtistCardComponent, AlbumListItemComponent],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
