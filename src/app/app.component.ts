@@ -32,6 +32,7 @@ import { Album } from './album';
 import { APP_CONFIG, AppConfig } from './app-config';
 import { MUSIC_SERVICE } from './services/music-service.token';
 import { MusicService } from './services/music-service.interface';
+import { AppleMusicService } from './services/apple-music.service';
 import {
   Subscription,
   Subject,
@@ -56,6 +57,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   artistsWithRecentAlbums$: Observable<Artist[]>;
   artistsSubscription: Subscription;
   loading: boolean = false;
+
+  // Provider selection
+  activeProvider: 'spotify' | 'apple' | null = null;
+  appleMusicLoading: boolean = false;
 
   // UI state for the header chip
   currentFilterLabel: string = 'This Week';
@@ -91,6 +96,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   constructor(
     @Inject(MUSIC_SERVICE) private musicService: MusicService,
+    private appleMusicService: AppleMusicService,
     private pkceService: PkceService,
     private http: HttpClient,
     private ngZone: NgZone,
@@ -127,45 +133,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (this.accessToken) {
+      // Stored token is from Spotify (Apple Music uses sessionStorage)
+      this.activeProvider = 'spotify';
       this.loading = true;
       const doneLoading$ = this.musicService.loadArtistsWithAlbums(
         this.accessToken,
       );
 
-      // TODO(me): figure out a better way to do the subscription logic.
-      this.artistsWithRecentAlbums$ = (
-        this.musicService.artists as Observable<Artist[]>
-      ).pipe(
-        map((artists) => artists.map((a) => Object.assign({}, a))),
-        map((artists) =>
-          artists.filter((artist) => {
-            artist.albums = artist.albums.filter(
-              SpotifyService.albumReleasedPastYear,
-            );
-            return artist.albums.length > 0;
-          }),
-        ),
-        takeUntil(this._destroyed$),
-      );
-
-      // Anniversary range-aware filtering for week/month selection
-      this.artists$ = combineLatest([
-        this.musicService.artists as Observable<Artist[]>,
-        this.anniversaryRange$,
-      ]).pipe(
-        map(([artists, range]) => {
-          const filteredArtists = artists.map((a) => Object.assign({}, a));
-          return filteredArtists.filter((artist) => {
-            artist.albums = artist.albums.filter((album) =>
-              range === 'week'
-                ? SpotifyService.albumHadBirthdayPastWeek(album)
-                : SpotifyService.albumHadBirthdayPastMonth(album),
-            );
-            return artist.albums.length > 0;
-          });
-        }),
-        takeUntil(this._destroyed$),
-      );
+      // Set up artists observables using the default music service (Spotify)
+      this.setupArtistsObservables(this.musicService);
 
       doneLoading$.pipe(takeUntil(this._destroyed$), take(1)).subscribe(() => {
         this.loading = false;
@@ -485,7 +461,88 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   logout(): void {
     this.accessToken = null;
+    this.activeProvider = null;
     this.clearStoredToken();
+  }
+
+  /**
+   * Logs in with Apple Music via MusicKit.
+   * CRITICAL: MusicKit authorize() must be called directly in click handler
+   * to avoid Safari popup blocking.
+   */
+  async loginAppleMusic(): Promise<void> {
+    this.appleMusicLoading = true;
+    try {
+      // Initialize MusicKit (loads script, fetches developer token, configures)
+      await this.appleMusicService.initialize();
+
+      // Authorize user (opens popup - must be in direct click handler!)
+      const userToken = await this.appleMusicService.authorize();
+
+      // Set active provider
+      this.activeProvider = 'apple';
+      this.accessToken = userToken;
+
+      // Load artists using Apple Music service
+      this.loading = true;
+      this.appleMusicLoading = false;
+
+      // Use AppleMusicService directly (not MUSIC_SERVICE which defaults to Spotify)
+      const doneLoading$ =
+        this.appleMusicService.loadArtistsWithAlbums(userToken);
+
+      // Set up artists observables using AppleMusicService
+      this.setupArtistsObservables(this.appleMusicService);
+
+      doneLoading$.pipe(takeUntil(this._destroyed$), take(1)).subscribe(() => {
+        this.loading = false;
+        this.initObserverIfReady();
+      });
+    } catch (error) {
+      console.error('Apple Music login failed:', error);
+      this.appleMusicLoading = false;
+      // Could show error message to user here
+    }
+  }
+
+  /**
+   * Sets up the artists observables from a given music service.
+   * Used by both Spotify and Apple Music login flows.
+   */
+  private setupArtistsObservables(service: MusicService): void {
+    this.artistsWithRecentAlbums$ = (
+      service.artists as Observable<Artist[]>
+    ).pipe(
+      map((artists) => artists.map((a) => Object.assign({}, a))),
+      map((artists) =>
+        artists.filter((artist) => {
+          artist.albums = artist.albums.filter(
+            SpotifyService.albumReleasedPastYear,
+          );
+          return artist.albums.length > 0;
+        }),
+      ),
+      takeUntil(this._destroyed$),
+    );
+
+    // Anniversary range-aware filtering for week/month selection
+    this.artists$ = combineLatest([
+      service.artists as Observable<Artist[]>,
+      this.anniversaryRange$,
+    ]).pipe(
+      map(([artists, range]) => {
+        const filteredArtists = artists.map((a) => Object.assign({}, a));
+        return filteredArtists.filter((artist) => {
+          artist.albums = artist.albums.filter((album) =>
+            range === 'week'
+              ? SpotifyService.albumHadBirthdayPastWeek(album)
+              : SpotifyService.albumHadBirthdayPastMonth(album),
+          );
+          return artist.albums.length > 0;
+        });
+      }),
+      takeUntil(this._destroyed$),
+    );
   }
 
   /**
