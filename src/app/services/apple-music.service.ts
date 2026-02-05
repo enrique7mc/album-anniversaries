@@ -13,9 +13,12 @@ import { MusicKitLoaderService } from './musickit-loader.service';
 const STORAGE_KEY_TOKEN = 'apple_music_token';
 const STORAGE_KEY_TOKEN_EXPIRY = 'apple_music_token_expiry';
 const TOKEN_EXPIRY_MS = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds
-const RATE_LIMIT_BATCH_SIZE = 5;
-const RATE_LIMIT_DELAY_MS = 200;
+const RATE_LIMIT_BATCH_SIZE = 1; // Sequential requests to avoid 429s
+const RATE_LIMIT_DELAY_MS = 500; // 500ms between requests
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 1000; // Start with 1s, exponential backoff
 const API_LIMIT = 100;
+const MAX_ARTISTS = 20; // TODO: Remove this limit once rate limiting is optimized
 const STOREFRONT = 'us';
 
 // Image sizes for artwork conversion
@@ -52,6 +55,11 @@ interface AppleMusicResource<T> {
   type: string;
   href?: string;
   attributes?: T;
+  relationships?: {
+    catalog?: {
+      data?: Array<{ id: string; type: string }>;
+    };
+  };
 }
 
 interface AppleMusicResponse<T> {
@@ -186,8 +194,12 @@ export class AppleMusicService implements MusicService {
   }
 
   /**
-   * Fetches all library artists from Apple Music.
+   * Fetches library artists from Apple Music with their catalog relationships.
    * Handles pagination via 'next' property.
+   * Currently limited to MAX_ARTISTS to avoid rate limiting during development.
+   *
+   * NOTE: Library artist IDs (r.xxxxx) differ from catalog IDs.
+   * We request the 'catalog' relationship to get the catalog artist ID for album fetching.
    */
   private async fetchAllLibraryArtists(): Promise<
     AppleMusicResource<AppleMusicArtistAttributes>[]
@@ -197,10 +209,11 @@ export class AppleMusicService implements MusicService {
     }
 
     const allArtists: AppleMusicResource<AppleMusicArtistAttributes>[] = [];
+    // Include catalog relationship to get catalog artist IDs
     let nextUrl: string | undefined =
-      `/v1/me/library/artists?limit=${API_LIMIT}`;
+      `/v1/me/library/artists?limit=${Math.min(API_LIMIT, MAX_ARTISTS)}&include=catalog`;
 
-    while (nextUrl) {
+    while (nextUrl && allArtists.length < MAX_ARTISTS) {
       const rawResponse = await this.musicKitInstance.api.music(nextUrl);
 
       // MusicKit v3 may wrap the response in a 'data' property
@@ -212,15 +225,22 @@ export class AppleMusicService implements MusicService {
         allArtists.push(...response.data);
       }
 
+      // Stop if we've reached MAX_ARTISTS
+      if (allArtists.length >= MAX_ARTISTS) {
+        break;
+      }
+
       nextUrl = response?.next;
     }
 
-    return allArtists;
+    // Trim to MAX_ARTISTS if we fetched more
+    return allArtists.slice(0, MAX_ARTISTS);
   }
 
   /**
    * Fetches albums for all artists with rate limiting.
    * Batches requests to avoid throttling.
+   * Uses catalog artist ID (from relationships) for album fetching.
    */
   private async fetchAlbumsForAllArtists(
     libraryArtists: AppleMusicResource<AppleMusicArtistAttributes>[],
@@ -233,10 +253,18 @@ export class AppleMusicService implements MusicService {
 
       const batchResults = await Promise.all(
         batch.map(async (libraryArtist) => {
-          const albums = await this.fetchAlbumsForArtist(libraryArtist.id);
+          // Extract catalog artist ID from relationships
+          // Library IDs (r.xxxxx) don't work with catalog API
+          const catalogArtistId = this.getCatalogArtistId(libraryArtist);
+
+          let albums: AppleMusicResource<AppleMusicAlbumAttributes>[] = [];
+          if (catalogArtistId) {
+            albums = await this.fetchAlbumsForArtist(catalogArtistId);
+          }
+
           const artist = this.mapToArtist(libraryArtist);
           artist.albums = albums.map((album) =>
-            this.mapToAlbum(album, libraryArtist.id),
+            this.mapToAlbum(album, catalogArtistId || libraryArtist.id),
           );
           return artist;
         }),
@@ -254,7 +282,22 @@ export class AppleMusicService implements MusicService {
   }
 
   /**
+   * Extracts catalog artist ID from library artist relationships.
+   * Returns null if no catalog relationship exists.
+   */
+  private getCatalogArtistId(
+    libraryArtist: AppleMusicResource<AppleMusicArtistAttributes>,
+  ): string | null {
+    const catalogData = libraryArtist.relationships?.catalog?.data;
+    if (catalogData && catalogData.length > 0) {
+      return catalogData[0].id;
+    }
+    return null;
+  }
+
+  /**
    * Fetches albums for a specific artist from the catalog.
+   * Includes retry logic with exponential backoff for rate limit errors.
    */
   private async fetchAlbumsForArtist(
     artistId: string,
@@ -263,23 +306,100 @@ export class AppleMusicService implements MusicService {
       return [];
     }
 
-    try {
-      const rawResponse = await this.musicKitInstance.api.music(
-        `/v1/catalog/${STOREFRONT}/artists/${artistId}/albums?limit=${API_LIMIT}`,
-      );
+    let lastError: unknown;
 
-      // MusicKit v3 may wrap the response in a 'data' property
-      const response: AppleMusicResponse<AppleMusicAlbumAttributes> =
-        this.unwrapResponse(rawResponse);
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const rawResponse = await this.musicKitInstance.api.music(
+          `/v1/catalog/${STOREFRONT}/artists/${artistId}/albums?limit=${API_LIMIT}`,
+        );
 
-      return Array.isArray(response?.data) ? response.data : [];
-    } catch (error) {
-      console.error(
-        `[AppleMusicService] Error fetching albums for artist ${artistId}:`,
-        error,
-      );
-      return [];
+        // MusicKit v3 may wrap the response in a 'data' property
+        const response: AppleMusicResponse<AppleMusicAlbumAttributes> =
+          this.unwrapResponse(rawResponse);
+
+        return Array.isArray(response?.data) ? response.data : [];
+      } catch (error) {
+        lastError = error;
+
+        // 404 "No related resources" is expected - artist has no albums in catalog
+        if (this.isNotFoundError(error)) {
+          return [];
+        }
+
+        // Check if it's a rate limit error (429)
+        if (this.isRateLimitError(error)) {
+          const backoffDelay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt); // 1s, 2s, 4s
+          console.warn(
+            `[AppleMusicService] Rate limited for artist ${artistId}, retrying in ${backoffDelay}ms (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          );
+          await this.delay(backoffDelay);
+          continue;
+        }
+
+        // For non-rate-limit errors, don't retry
+        break;
+      }
     }
+
+    // Log error only if we exhausted retries or hit a non-recoverable error
+    console.error(
+      `[AppleMusicService] Error fetching albums for artist ${artistId}:`,
+      lastError,
+    );
+    return [];
+  }
+
+  /**
+   * Checks if an error is a "not found" (404) error.
+   * This is expected when an artist has no albums in the catalog.
+   */
+  private isNotFoundError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') {
+      return false;
+    }
+
+    const err = error as Record<string, unknown>;
+
+    // Check direct status
+    if (err.status === 404 || err.errorCode === 404) {
+      return true;
+    }
+
+    // Check nested errors array (Apple Music API format)
+    if (Array.isArray(err.errors)) {
+      return err.errors.some(
+        (e: Record<string, unknown>) =>
+          e.status === '404' || e.code === '40403',
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if an error is a rate limit (429) error.
+   */
+  private isRateLimitError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') {
+      return false;
+    }
+
+    const err = error as Record<string, unknown>;
+
+    // Check direct status
+    if (err.status === 429 || err.errorCode === 429) {
+      return true;
+    }
+
+    // Check nested errors array (Apple Music API format)
+    if (Array.isArray(err.errors)) {
+      return err.errors.some(
+        (e: Record<string, unknown>) => e.status === '429',
+      );
+    }
+
+    return typeof err.message === 'string' && err.message.includes('429');
   }
 
   /**
