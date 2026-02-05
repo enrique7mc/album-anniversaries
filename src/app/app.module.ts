@@ -10,6 +10,8 @@ import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
 import { MUSIC_SERVICE } from './services/music-service.token';
 import { SpotifyService } from './spotify.service';
+import { AppleMusicService } from './services/apple-music.service';
+import { MusicKitLoaderService } from './services/musickit-loader.service';
 import {
   LucideAngularModule,
   Disc,
@@ -45,10 +47,18 @@ import {
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideFunctions(() => getFunctions()),
     SpotifyService,
+    AppleMusicService,
+    MusicKitLoaderService,
     {
       provide: MUSIC_SERVICE,
-      useFactory: (spotifyService: SpotifyService) => spotifyService,
-      deps: [SpotifyService],
+      useFactory: (
+        spotifyService: SpotifyService,
+        appleMusicService: AppleMusicService,
+      ) => {
+        // Default to Spotify - provider switching handled at runtime in AppComponent
+        return spotifyService;
+      },
+      deps: [SpotifyService, AppleMusicService],
     },
   ],
   bootstrap: [AppComponent],
