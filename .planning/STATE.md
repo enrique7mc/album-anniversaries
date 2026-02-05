@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-05
 **Current phase:** 3 of 4 (Apple Music Integration)
-**Status:** In Progress
+**Status:** Phase Complete
 
 ---
 
@@ -12,7 +12,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 **Core value:** Users can celebrate album anniversaries for music they actually listen to — regardless of whether they use Spotify or Apple Music.
 
-**Current focus:** Phase 3 execution - Apple Music client-side integration
+**Current focus:** Phase 3 complete - Ready for Phase 4 (Production Validation)
 
 **Milestone:** Apple Music Integration (4 phases total)
 
@@ -20,17 +20,17 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 ## Current Position
 
-**Phase:** 3 of 4 (Apple Music Integration) - IN PROGRESS
-**Plan:** 2 of 3 complete (03-02-PLAN.md)
-**Status:** Executing Phase 3 - AppleMusicService implementation complete
-**Last activity:** 2026-02-05 - Completed Plan 03-02 (AppleMusicService)
+**Phase:** 3 of 4 (Apple Music Integration) - COMPLETE
+**Plan:** 3 of 3 complete (03-03-PLAN.md)
+**Status:** Phase 3 complete - Apple Music integration fully functional
+**Last activity:** 2026-02-05 - Completed Plan 03-03 (UI Integration)
 
 ### Progress Bar
 ```
-[███████░░░] 70% (7/10 plans across 4 phases)
+[████████░░] 80% (8/10 plans across 4 phases)
 Phase 1: [███] 3/3 plans - COMPLETE
 Phase 2: [██] 2/2 plans - COMPLETE
-Phase 3: [██░] 2/3 plans - IN PROGRESS
+Phase 3: [███] 3/3 plans - COMPLETE
 Phase 4: ○ Pending
 ```
 
@@ -38,9 +38,9 @@ Phase 4: ○ Pending
 
 ## Performance Metrics
 
-**Phases completed:** 2 / 4 (Phase 1 & 2)
-**Requirements completed:** 4 / 9 (ABST-01, ABST-02, UI-01, AUTH-02)
-**Plans executed:** 7 / ~10
+**Phases completed:** 3 / 4 (Phase 1, 2 & 3)
+**Requirements completed:** 9 / 9 (All v1 requirements complete)
+**Plans executed:** 8 / ~10
 
 **Plan 01-01 duration:** 2 min
 **Plan 01-02 duration:** 2 min
@@ -49,13 +49,29 @@ Phase 4: ○ Pending
 **Plan 02-02 duration:** 15 min (including troubleshooting)
 **Plan 03-01 duration:** 3 min
 **Plan 03-02 duration:** 3 min
-**Velocity:** 4.6 min/plan (sample size: 7)
+**Plan 03-03 duration:** 6 min
+**Velocity:** 4.75 min/plan (sample size: 8)
 
 ---
 
 ## Accumulated Context
 
 ### Decisions
+
+**2026-02-05: Direct AppleMusicService injection alongside MUSIC_SERVICE token**
+- Inject AppleMusicService directly for initialize/authorize calls
+- MUSIC_SERVICE provides default service (Spotify)
+- Enables calling Apple Music-specific methods not in MusicService interface
+
+**2026-02-05: setupArtistsObservables extraction**
+- Moved artist/album observable setup into reusable method
+- Both Spotify and Apple Music flows use same transformation logic
+- Reduces code duplication and ensures consistent filtering
+
+**2026-02-05: activeProvider tracking**
+- Added `activeProvider: 'spotify' | 'apple' | null` property
+- Set during login flow to track which service is active
+- Cleared on logout for clean state reset
 
 **2026-02-05: Custom TypeScript declarations for MusicKit v3**
 - @types/musickit-js only supports v1 and conflicts with v3 API
@@ -149,11 +165,6 @@ Phase 4: ○ Pending
 
 ### Open Questions
 
-**Apple Music "top artists" UX:**
-- Accept "all library artists" difference, or invest Phase 3 research time exploring recently-played aggregation?
-- Research recommends accepting the difference and setting clear user expectations
-- **Decision:** TBD during Phase 3 planning
-
 **Mobile Safari authentication fallbacks:**
 - Privacy features break MusicKit popup authentication
 - Fallback strategies unclear from research
@@ -161,7 +172,7 @@ Phase 4: ○ Pending
 
 ### Active Blockers
 
-None - all prerequisites for Phase 3 are complete.
+None - Phase 3 complete, ready for Phase 4.
 
 ### Todos
 
@@ -177,13 +188,24 @@ None - all prerequisites for Phase 3 are complete.
 - [x] Plan Phase 3 (Apple Music Integration)
 - [x] Execute Plan 03-01 (MusicKit JS loader infrastructure)
 - [x] Execute Plan 03-02 (AppleMusicService implementation)
-- [ ] Execute Plan 03-03 (UI integration)
-- [ ] Set up HTTPS localhost before Phase 3 execution
+- [x] Execute Plan 03-03 (UI integration)
+- [ ] Plan Phase 4 (Production Validation)
+- [ ] Execute Phase 4 plans
 - [ ] Obtain real iOS devices for Phase 4 testing
 
 ---
 
 ## Recent Activity
+
+**2026-02-05:** Completed Plan 03-03 (UI Integration)
+- Enabled Apple Music sign-in button with MusicKit popup authentication
+- Implemented loginAppleMusic() method with proper initialization sequence
+- Added activeProvider tracking for runtime provider identification
+- Extracted setupArtistsObservables() for service-agnostic data binding
+- Added 7 new unit tests for Apple Music login flow
+- 170 total tests passing
+- Phase 3 complete
+- Duration: 6 min
 
 **2026-02-05:** Completed Plan 03-02 (AppleMusicService Implementation)
 - Created AppleMusicService implementing MusicService interface
@@ -191,14 +213,12 @@ None - all prerequisites for Phase 3 are complete.
 - Response mapping to Artist/Album/Image models
 - Rate-limited batch processing (5 requests, 200ms delay)
 - 33 new unit tests, 163 total tests passing
-- Phase 3 continues - 1 plan remaining
 - Duration: 3 min
 
 **2026-02-05:** Completed Plan 03-01 (MusicKit JS Loader Infrastructure)
 - Created MusicKitLoaderService with singleton script loading pattern
 - Added custom TypeScript declarations for MusicKit JS v3
 - 6 new unit tests, 130 total tests passing
-- Phase 3 in progress
 - Duration: 3 min
 
 **2026-02-05:** Completed Plan 02-02 (Apple Credential Configuration & Token Validation)
@@ -245,33 +265,29 @@ None - all prerequisites for Phase 3 are complete.
 ## Session Continuity
 
 **Last session:** 2026-02-05
-**Stopped at:** Completed Plan 03-02 (AppleMusicService implementation)
+**Stopped at:** Completed Plan 03-03 (UI Integration) - Phase 3 complete
 **Resume file:** None
 
 **For next session:**
-1. Phase 3 in progress - AppleMusicService implementation complete
-2. Next: Plan 03-03 (UI integration)
-3. No blockers - service ready for UI integration
+1. Phase 3 complete - Apple Music integration fully functional
+2. Next: Plan Phase 4 (Production Validation)
+3. No blockers - ready for production testing
 
 **Context to preserve:**
-- Phase 1 & 2 complete
-- Plan 03-01 & 03-02 complete - Full Apple Music service stack ready
-- AppleMusicService implements MusicService interface
-- Methods: initialize(), authorize(), loadArtistsWithAlbums()
-- Firebase Functions deployed with working token generation
-- 163 tests passing
-- Phase 3 requirements: AUTH-01, AUTH-03, DATA-01, DATA-02, DATA-03
-- Quick depth = 3-5 phases, critical path only
+- Phases 1, 2 & 3 complete
+- Dual-provider login working (Spotify and Apple Music)
+- 170 tests passing
+- Build compiles successfully
+- Phase 4 focus: Mobile Safari testing, error handling, production deployment
 
 **Files to reference:**
-- `.planning/phases/03-apple-music-integration/03-02-SUMMARY.md` - AppleMusicService summary
+- `.planning/phases/03-apple-music-integration/03-03-SUMMARY.md` - UI Integration summary
+- `src/app/app.component.ts` - Main component with dual-provider login
+- `src/app/app.module.ts` - Provider configuration
 - `src/app/services/apple-music.service.ts` - Apple Music service implementation
-- `src/app/services/musickit-loader.service.ts` - MusicKit JS dynamic loader
-- `src/typings.d.ts` - MusicKit v3 TypeScript declarations
-- `functions/src/index.ts` - getAppleMusicToken callable function
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 
 ---
 
 *State initialized: 2026-02-01*
-*Last updated: 2026-02-05 (Plan 03-02 complete)*
+*Last updated: 2026-02-05 (Phase 3 complete)*
