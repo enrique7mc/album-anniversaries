@@ -47,8 +47,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Upgrade Firebase Functions to v2, implement getAppleMusicToken callable
-- [ ] 02-02-PLAN.md — Configure Apple credentials, validate token against Apple Music API
+- [x] 02-01-PLAN.md — Upgrade Firebase Functions to v2, implement getAppleMusicToken callable
+- [x] 02-02-PLAN.md — Configure Apple credentials, validate token against Apple Music API
 
 ---
 
@@ -69,7 +69,13 @@ Plans:
 - Phase 2 (Backend Infrastructure) complete
 - HTTPS localhost setup for development
 
-**Plans:** (created during /gsd:plan-phase)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — MusicKit loader service + TypeScript declarations
+- [ ] 03-02-PLAN.md — AppleMusicService implementation (auth + data fetching)
+- [ ] 03-03-PLAN.md — AppComponent + app.module wiring (provider selection)
+- [ ] 03-04-PLAN.md — Integration verification checkpoint
 
 ---
 
@@ -98,8 +104,8 @@ Plans:
 | Phase | Status | Plans | Requirements |
 |-------|--------|-------|--------------|
 | 1 - Service Abstraction & UI Foundation | ● Complete | 3/3 | 3 |
-| 2 - Backend Infrastructure | ○ Pending | 0/2 | 1 |
-| 3 - Apple Music Integration | ○ Pending | 0/0 | 5 |
+| 2 - Backend Infrastructure | ● Complete | 2/2 | 1 |
+| 3 - Apple Music Integration | ○ Pending | 0/4 | 5 |
 | 4 - Production Validation | ○ Pending | 0/0 | 0 (validation) |
 
 **Legend:** ○ Pending | ◐ In Progress | ● Complete
@@ -142,4 +148,4 @@ Plans:
 
 ---
 
-*Last updated: 2026-02-01 (Phase 2 planned)*
+*Last updated: 2026-02-05 (Phase 3 planned)*
