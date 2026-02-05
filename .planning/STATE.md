@@ -1,8 +1,8 @@
 # Project State: Album Anniversaries - Apple Music Integration
 
-**Last updated:** 2026-02-01
-**Current phase:** 2 of 4 (Backend Infrastructure)
-**Status:** In Progress
+**Last updated:** 2026-02-05
+**Current phase:** 3 of 4 (Apple Music Integration)
+**Status:** Ready to Plan
 
 ---
 
@@ -12,7 +12,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 **Core value:** Users can celebrate album anniversaries for music they actually listen to — regardless of whether they use Spotify or Apple Music.
 
-**Current focus:** Phase 2 in progress - Backend infrastructure for Apple Music
+**Current focus:** Phase 3 planning - Apple Music client-side integration
 
 **Milestone:** Apple Music Integration (4 phases total)
 
@@ -20,17 +20,17 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 ## Current Position
 
-**Phase:** 2 of 4 (Backend Infrastructure) - IN PROGRESS
-**Plan:** 1 of 1 complete (02-01)
-**Status:** Phase 2 complete - Ready for Phase 3 (pending user setup)
-**Last activity:** 2026-02-01 - Completed 02-01-PLAN.md
+**Phase:** 3 of 4 (Apple Music Integration) - READY TO PLAN
+**Plan:** 0 of ? (not yet planned)
+**Status:** Phase 2 complete - Credentials validated - Ready for Phase 3 planning
+**Last activity:** 2026-02-05 - Completed Plan 02-02 (credential configuration & validation)
 
 ### Progress Bar
 ```
-[████○] 33% (4/12 plans across 4 phases)
+[█████░░░░░] 50% (5/10 plans across 4 phases)
 Phase 1: [███] 3/3 plans - COMPLETE
-Phase 2: [█] 1/1 plan - COMPLETE (pending user credentials)
-Phase 3: ○ Pending
+Phase 2: [██] 2/2 plans - COMPLETE
+Phase 3: ○ Ready to plan
 Phase 4: ○ Pending
 ```
 
@@ -40,20 +40,31 @@ Phase 4: ○ Pending
 
 **Phases completed:** 2 / 4 (Phase 1 & 2)
 **Requirements completed:** 4 / 9 (ABST-01, ABST-02, UI-01, AUTH-02)
-**Plans executed:** 4 / 12
+**Plans executed:** 5 / ~10
 
 **Plan 01-01 duration:** 2 min
 **Plan 01-02 duration:** 2 min
 **Plan 01-03 duration:** 3 min
 **Plan 02-01 duration:** 4 min
-**Velocity:** 2.8 min/plan (sample size: 4)
-**Estimated completion:** TBD
+**Plan 02-02 duration:** 15 min (including troubleshooting)
+**Velocity:** 5.2 min/plan (sample size: 5)
 
 ---
 
 ## Accumulated Context
 
 ### Decisions
+
+**2026-02-05: PEM key normalization in Firebase Functions**
+- Firebase secrets can mangle newlines in multiline content
+- Added `normalizePemKey()` function to handle literal `\n` strings
+- Reconstructs proper PEM format before parsing
+
+**2026-02-05: Apple Developer credentials configured**
+- Team ID: BLS68A8QS3
+- Key ID: BJJQKRM296
+- Private key stored in Secret Manager
+- Token validates successfully against Apple Music API (HTTP 200)
 
 **2026-02-01: JWT payload structure for Apple Music tokens**
 - Only required claims: iss (Team ID), iat (issued at), exp (expiry)
@@ -131,12 +142,7 @@ Phase 4: ○ Pending
 
 ### Active Blockers
 
-**Phase 3 requires Apple Developer credentials**
-- Phase 2 backend complete but cannot deploy until secrets configured
-- Need Team ID, Key ID, and .p8 private key for MusicKit JWT signing
-- Must enable Secret Manager API in Google Cloud Console
-- Must set Firebase secrets: APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY
-- Cannot test getAppleMusicToken function until credentials configured
+None - all prerequisites for Phase 3 are complete.
 
 ### Todos
 
@@ -144,23 +150,30 @@ Phase 4: ○ Pending
 - [x] Execute Plan 01-02 (provider wiring in app.module/app.component)
 - [x] Execute Plan 01-03 (landing page UI)
 - [x] Execute Plan 02-01 (Firebase Functions infrastructure)
-- [ ] Enroll in Apple Developer Program before Phase 3
-- [ ] Obtain MusicKit credentials (Team ID, Key ID, .p8 key) before Phase 3
-- [ ] Enable Secret Manager API in Google Cloud Console
-- [ ] Set Firebase secrets for Apple Developer credentials
-- [ ] Deploy Firebase Functions with secrets configured
-- [ ] Set up HTTPS localhost before Phase 3
+- [x] Execute Plan 02-02 (Apple credential configuration & validation)
+- [x] Enroll in Apple Developer Program
+- [x] Obtain MusicKit credentials (Team ID, Key ID, .p8 key)
+- [x] Set Firebase secrets for Apple Developer credentials
+- [x] Deploy Firebase Functions with secrets configured
+- [ ] Plan Phase 3 (Apple Music Integration)
+- [ ] Set up HTTPS localhost before Phase 3 execution
 - [ ] Obtain real iOS devices for Phase 4 testing
 
 ---
 
 ## Recent Activity
 
+**2026-02-05:** Completed Plan 02-02 (Apple Credential Configuration & Token Validation)
+- Configured APPLE_TEAM_ID (BLS68A8QS3), APPLE_KEY_ID (BJJQKRM296), APPLE_PRIVATE_KEY
+- Added normalizePemKey() to handle Firebase secrets newline formatting
+- Token validates against Apple Music API (HTTP 200)
+- Phase 2 complete
+- Duration: 15 min
+
 **2026-02-01:** Completed Plan 02-01 (Firebase Functions Infrastructure)
 - Upgraded Firebase Functions from v2 (1st gen) to v5 (2nd gen) with Node 20 runtime
 - Implemented getAppleMusicToken callable function with ES256 JWT signing
 - Configured token caching with 180-day expiry and 1-hour refresh buffer
-- Deployment ready but requires Apple Developer credentials and Secret Manager API enablement
 - Duration: 4 min
 
 **2026-02-01:** Completed Plan 01-02 (MUSIC_SERVICE Provider Wiring)
@@ -186,51 +199,37 @@ Phase 4: ○ Pending
 - Duration: 2 min
 
 **2026-02-01:** Roadmap created with 4 phases, 9 v1 requirements mapped
-- Phase 1: Service Abstraction & UI Foundation (ABST-01, ABST-02, UI-01)
-- Phase 2: Backend Infrastructure (AUTH-02)
-- Phase 3: Apple Music Integration (AUTH-01, AUTH-03, DATA-01, DATA-02, DATA-03)
-- Phase 4: Production Validation (cross-platform testing)
 
-**2026-01-31:** Research completed
-- Comprehensive research findings in .planning/research/SUMMARY.md
-- 15 critical pitfalls identified
-- 6-phase structure suggested (compressed to 4 for quick depth)
-
-**2026-01-31:** Project initialized
-- PROJECT.md created with core value and constraints
-- REQUIREMENTS.md created with 9 v1 requirements
-- Research phase completed
+**2026-01-31:** Research completed & Project initialized
 
 ---
 
 ## Session Continuity
 
-**Last session:** 2026-02-01
-**Stopped at:** Completed Plan 02-01-PLAN.md - Phase 2 Complete (pending user credentials)
+**Last session:** 2026-02-05
+**Stopped at:** Phase 2 complete - Ready for Phase 3 planning
 **Resume file:** None
 
 **For next session:**
-1. Phase 2 complete - Firebase Functions infrastructure ready
-2. Before Phase 3: User must enroll in Apple Developer Program, obtain credentials, and configure secrets
-3. Phase 3 focuses on Apple Music client-side integration (MusicKit JS)
+1. Phase 2 fully complete - Backend infrastructure deployed and validated
+2. Phase 3 ready to plan - Apple Music client-side integration
+3. No blockers - all credentials configured and working
 
 **Context to preserve:**
 - Phase 1 & 2 complete
-- Firebase Functions v2 infrastructure upgraded (Node 20, firebase-functions@5.0.0)
-- getAppleMusicToken function implemented with ES256 JWT signing and token caching
-- Function uses defineSecret for APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY
-- Deployment requires Secret Manager API enablement and secret configuration
+- Firebase Functions deployed with working token generation
+- Token endpoint: `https://us-central1-album-anniversaries.cloudfunctions.net/getAppleMusicToken`
+- Apple Music API accepts tokens (validated HTTP 200)
+- Phase 3 requirements: AUTH-01, AUTH-03, DATA-01, DATA-02, DATA-03
 - Quick depth = 3-5 phases, critical path only
-- Phase 3 cannot start until credentials configured
 
 **Files to reference:**
+- `.planning/phases/02-backend-infrastructure/02-02-SUMMARY.md` - Credential configuration summary
 - `.planning/phases/02-backend-infrastructure/02-01-SUMMARY.md` - Firebase Functions infrastructure summary
 - `functions/src/index.ts` - getAppleMusicToken callable function
-- `functions/package.json` - Firebase Functions v2 dependencies
-- `firebase.json` - Functions deployment configuration
-- `.planning/phases/01-service-abstraction-ui-foundation/01-01-SUMMARY.md` - MusicService interface summary
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 
 ---
 
 *State initialized: 2026-02-01*
+*Last updated: 2026-02-05*
