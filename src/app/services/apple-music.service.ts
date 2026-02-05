@@ -201,14 +201,18 @@ export class AppleMusicService implements MusicService {
       `/v1/me/library/artists?limit=${API_LIMIT}`;
 
     while (nextUrl) {
-      const response: AppleMusicResponse<AppleMusicArtistAttributes> =
-        await this.musicKitInstance.api.music(nextUrl);
+      const rawResponse = await this.musicKitInstance.api.music(nextUrl);
 
-      if (response.data) {
+      // MusicKit v3 may wrap the response in a 'data' property
+      // Handle both { data: [...], next: "..." } and { data: { data: [...], next: "..." } }
+      const response: AppleMusicResponse<AppleMusicArtistAttributes> =
+        this.unwrapResponse(rawResponse);
+
+      if (response?.data && Array.isArray(response.data)) {
         allArtists.push(...response.data);
       }
 
-      nextUrl = response.next;
+      nextUrl = response?.next;
     }
 
     return allArtists;
@@ -260,12 +264,15 @@ export class AppleMusicService implements MusicService {
     }
 
     try {
-      const response: AppleMusicResponse<AppleMusicAlbumAttributes> =
-        await this.musicKitInstance.api.music(
-          `/v1/catalog/${STOREFRONT}/artists/${artistId}/albums?limit=${API_LIMIT}`,
-        );
+      const rawResponse = await this.musicKitInstance.api.music(
+        `/v1/catalog/${STOREFRONT}/artists/${artistId}/albums?limit=${API_LIMIT}`,
+      );
 
-      return response.data || [];
+      // MusicKit v3 may wrap the response in a 'data' property
+      const response: AppleMusicResponse<AppleMusicAlbumAttributes> =
+        this.unwrapResponse(rawResponse);
+
+      return Array.isArray(response?.data) ? response.data : [];
     } catch (error) {
       console.error(
         `[AppleMusicService] Error fetching albums for artist ${artistId}:`,
@@ -338,5 +345,31 @@ export class AppleMusicService implements MusicService {
    */
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Unwraps MusicKit API response which may be double-wrapped.
+   * MusicKit v3 sometimes returns { data: { data: [...], next: "..." } }
+   * instead of { data: [...], next: "..." }.
+   */
+  private unwrapResponse<T>(rawResponse: unknown): AppleMusicResponse<T> {
+    if (!rawResponse || typeof rawResponse !== 'object') {
+      return { data: [] };
+    }
+
+    const response = rawResponse as Record<string, unknown>;
+
+    // Check if response.data is an object with its own 'data' array (double-wrapped)
+    if (
+      response.data &&
+      typeof response.data === 'object' &&
+      !Array.isArray(response.data) &&
+      'data' in (response.data as object)
+    ) {
+      return response.data as AppleMusicResponse<T>;
+    }
+
+    // Response is already in correct format
+    return response as AppleMusicResponse<T>;
   }
 }
