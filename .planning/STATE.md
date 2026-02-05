@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-02-05
 **Current phase:** 3 of 4 (Apple Music Integration)
-**Status:** Ready to Plan
+**Status:** In Progress
 
 ---
 
@@ -12,7 +12,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 **Core value:** Users can celebrate album anniversaries for music they actually listen to — regardless of whether they use Spotify or Apple Music.
 
-**Current focus:** Phase 3 planning - Apple Music client-side integration
+**Current focus:** Phase 3 execution - Apple Music client-side integration
 
 **Milestone:** Apple Music Integration (4 phases total)
 
@@ -20,17 +20,17 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 ## Current Position
 
-**Phase:** 3 of 4 (Apple Music Integration) - READY TO PLAN
-**Plan:** 0 of ? (not yet planned)
-**Status:** Phase 2 complete - Credentials validated - Ready for Phase 3 planning
-**Last activity:** 2026-02-05 - Completed Plan 02-02 (credential configuration & validation)
+**Phase:** 3 of 4 (Apple Music Integration) - IN PROGRESS
+**Plan:** 1 of 3 complete (03-01-PLAN.md)
+**Status:** Executing Phase 3 - MusicKit loader infrastructure complete
+**Last activity:** 2026-02-05 - Completed Plan 03-01 (MusicKit JS loader)
 
 ### Progress Bar
 ```
-[█████░░░░░] 50% (5/10 plans across 4 phases)
+[██████░░░░] 60% (6/10 plans across 4 phases)
 Phase 1: [███] 3/3 plans - COMPLETE
 Phase 2: [██] 2/2 plans - COMPLETE
-Phase 3: ○ Ready to plan
+Phase 3: [█░░] 1/3 plans - IN PROGRESS
 Phase 4: ○ Pending
 ```
 
@@ -40,20 +40,31 @@ Phase 4: ○ Pending
 
 **Phases completed:** 2 / 4 (Phase 1 & 2)
 **Requirements completed:** 4 / 9 (ABST-01, ABST-02, UI-01, AUTH-02)
-**Plans executed:** 5 / ~10
+**Plans executed:** 6 / ~10
 
 **Plan 01-01 duration:** 2 min
 **Plan 01-02 duration:** 2 min
 **Plan 01-03 duration:** 3 min
 **Plan 02-01 duration:** 4 min
 **Plan 02-02 duration:** 15 min (including troubleshooting)
-**Velocity:** 5.2 min/plan (sample size: 5)
+**Plan 03-01 duration:** 3 min
+**Velocity:** 4.8 min/plan (sample size: 6)
 
 ---
 
 ## Accumulated Context
 
 ### Decisions
+
+**2026-02-05: Custom TypeScript declarations for MusicKit v3**
+- @types/musickit-js only supports v1 and conflicts with v3 API
+- Created custom declarations in src/typings.d.ts
+- Includes Window extension, MusicKitStatic, MusicKitInstance, MusicKitConfiguration, MusicKitError
+
+**2026-02-05: Singleton promise pattern for script loading**
+- MusicKitLoaderService caches loadPromise to prevent duplicate script injections
+- Reset on error to allow retry
+- musickitloaded event listener registered before script injection to avoid race conditions
 
 **2026-02-05: PEM key normalization in Firebase Functions**
 - Firebase secrets can mangle newlines in multiline content
@@ -155,13 +166,23 @@ None - all prerequisites for Phase 3 are complete.
 - [x] Obtain MusicKit credentials (Team ID, Key ID, .p8 key)
 - [x] Set Firebase secrets for Apple Developer credentials
 - [x] Deploy Firebase Functions with secrets configured
-- [ ] Plan Phase 3 (Apple Music Integration)
+- [x] Plan Phase 3 (Apple Music Integration)
+- [x] Execute Plan 03-01 (MusicKit JS loader infrastructure)
+- [ ] Execute Plan 03-02 (AppleMusicService implementation)
+- [ ] Execute Plan 03-03 (UI integration)
 - [ ] Set up HTTPS localhost before Phase 3 execution
 - [ ] Obtain real iOS devices for Phase 4 testing
 
 ---
 
 ## Recent Activity
+
+**2026-02-05:** Completed Plan 03-01 (MusicKit JS Loader Infrastructure)
+- Created MusicKitLoaderService with singleton script loading pattern
+- Added custom TypeScript declarations for MusicKit JS v3
+- 6 new unit tests, 130 total tests passing
+- Phase 3 in progress
+- Duration: 3 min
 
 **2026-02-05:** Completed Plan 02-02 (Apple Credential Configuration & Token Validation)
 - Configured APPLE_TEAM_ID (BLS68A8QS3), APPLE_KEY_ID (BJJQKRM296), APPLE_PRIVATE_KEY
@@ -207,16 +228,17 @@ None - all prerequisites for Phase 3 are complete.
 ## Session Continuity
 
 **Last session:** 2026-02-05
-**Stopped at:** Phase 2 complete - Ready for Phase 3 planning
+**Stopped at:** Completed Plan 03-01 (MusicKit JS loader infrastructure)
 **Resume file:** None
 
 **For next session:**
-1. Phase 2 fully complete - Backend infrastructure deployed and validated
-2. Phase 3 ready to plan - Apple Music client-side integration
-3. No blockers - all credentials configured and working
+1. Phase 3 in progress - MusicKit loader infrastructure complete
+2. Next: Plan 03-02 (AppleMusicService implementation)
+3. No blockers - infrastructure ready for service implementation
 
 **Context to preserve:**
 - Phase 1 & 2 complete
+- Plan 03-01 complete - MusicKitLoaderService and TypeScript declarations ready
 - Firebase Functions deployed with working token generation
 - Token endpoint: `https://us-central1-album-anniversaries.cloudfunctions.net/getAppleMusicToken`
 - Apple Music API accepts tokens (validated HTTP 200)
@@ -224,8 +246,9 @@ None - all prerequisites for Phase 3 are complete.
 - Quick depth = 3-5 phases, critical path only
 
 **Files to reference:**
-- `.planning/phases/02-backend-infrastructure/02-02-SUMMARY.md` - Credential configuration summary
-- `.planning/phases/02-backend-infrastructure/02-01-SUMMARY.md` - Firebase Functions infrastructure summary
+- `.planning/phases/03-apple-music-integration/03-01-SUMMARY.md` - MusicKit loader summary
+- `src/app/services/musickit-loader.service.ts` - MusicKit JS dynamic loader
+- `src/typings.d.ts` - MusicKit v3 TypeScript declarations
 - `functions/src/index.ts` - getAppleMusicToken callable function
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 
