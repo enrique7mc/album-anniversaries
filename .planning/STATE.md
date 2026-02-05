@@ -21,16 +21,16 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 ## Current Position
 
 **Phase:** 3 of 4 (Apple Music Integration) - IN PROGRESS
-**Plan:** 1 of 3 complete (03-01-PLAN.md)
-**Status:** Executing Phase 3 - MusicKit loader infrastructure complete
-**Last activity:** 2026-02-05 - Completed Plan 03-01 (MusicKit JS loader)
+**Plan:** 2 of 3 complete (03-02-PLAN.md)
+**Status:** Executing Phase 3 - AppleMusicService implementation complete
+**Last activity:** 2026-02-05 - Completed Plan 03-02 (AppleMusicService)
 
 ### Progress Bar
 ```
-[██████░░░░] 60% (6/10 plans across 4 phases)
+[███████░░░] 70% (7/10 plans across 4 phases)
 Phase 1: [███] 3/3 plans - COMPLETE
 Phase 2: [██] 2/2 plans - COMPLETE
-Phase 3: [█░░] 1/3 plans - IN PROGRESS
+Phase 3: [██░] 2/3 plans - IN PROGRESS
 Phase 4: ○ Pending
 ```
 
@@ -40,7 +40,7 @@ Phase 4: ○ Pending
 
 **Phases completed:** 2 / 4 (Phase 1 & 2)
 **Requirements completed:** 4 / 9 (ABST-01, ABST-02, UI-01, AUTH-02)
-**Plans executed:** 6 / ~10
+**Plans executed:** 7 / ~10
 
 **Plan 01-01 duration:** 2 min
 **Plan 01-02 duration:** 2 min
@@ -48,7 +48,8 @@ Phase 4: ○ Pending
 **Plan 02-01 duration:** 4 min
 **Plan 02-02 duration:** 15 min (including troubleshooting)
 **Plan 03-01 duration:** 3 min
-**Velocity:** 4.8 min/plan (sample size: 6)
+**Plan 03-02 duration:** 3 min
+**Velocity:** 4.6 min/plan (sample size: 7)
 
 ---
 
@@ -60,6 +61,13 @@ Phase 4: ○ Pending
 - @types/musickit-js only supports v1 and conflicts with v3 API
 - Created custom declarations in src/typings.d.ts
 - Includes Window extension, MusicKitStatic, MusicKitInstance, MusicKitConfiguration, MusicKitError
+
+**2026-02-05: AppleMusicService design decisions**
+- Hardcoded 'us' storefront for catalog API - acceptable for v1
+- Artist popularity always 0 - Apple Music doesn't provide this metric
+- release_date_precision always 'day' - Apple provides full dates
+- Music User Token in sessionStorage with 6-month expiry
+- Rate limiting: 5 requests per batch, 200ms delay between batches
 
 **2026-02-05: Singleton promise pattern for script loading**
 - MusicKitLoaderService caches loadPromise to prevent duplicate script injections
@@ -168,7 +176,7 @@ None - all prerequisites for Phase 3 are complete.
 - [x] Deploy Firebase Functions with secrets configured
 - [x] Plan Phase 3 (Apple Music Integration)
 - [x] Execute Plan 03-01 (MusicKit JS loader infrastructure)
-- [ ] Execute Plan 03-02 (AppleMusicService implementation)
+- [x] Execute Plan 03-02 (AppleMusicService implementation)
 - [ ] Execute Plan 03-03 (UI integration)
 - [ ] Set up HTTPS localhost before Phase 3 execution
 - [ ] Obtain real iOS devices for Phase 4 testing
@@ -176,6 +184,15 @@ None - all prerequisites for Phase 3 are complete.
 ---
 
 ## Recent Activity
+
+**2026-02-05:** Completed Plan 03-02 (AppleMusicService Implementation)
+- Created AppleMusicService implementing MusicService interface
+- Developer token fetching, user authorization, library artist/album fetching
+- Response mapping to Artist/Album/Image models
+- Rate-limited batch processing (5 requests, 200ms delay)
+- 33 new unit tests, 163 total tests passing
+- Phase 3 continues - 1 plan remaining
+- Duration: 3 min
 
 **2026-02-05:** Completed Plan 03-01 (MusicKit JS Loader Infrastructure)
 - Created MusicKitLoaderService with singleton script loading pattern
@@ -228,25 +245,27 @@ None - all prerequisites for Phase 3 are complete.
 ## Session Continuity
 
 **Last session:** 2026-02-05
-**Stopped at:** Completed Plan 03-01 (MusicKit JS loader infrastructure)
+**Stopped at:** Completed Plan 03-02 (AppleMusicService implementation)
 **Resume file:** None
 
 **For next session:**
-1. Phase 3 in progress - MusicKit loader infrastructure complete
-2. Next: Plan 03-02 (AppleMusicService implementation)
-3. No blockers - infrastructure ready for service implementation
+1. Phase 3 in progress - AppleMusicService implementation complete
+2. Next: Plan 03-03 (UI integration)
+3. No blockers - service ready for UI integration
 
 **Context to preserve:**
 - Phase 1 & 2 complete
-- Plan 03-01 complete - MusicKitLoaderService and TypeScript declarations ready
+- Plan 03-01 & 03-02 complete - Full Apple Music service stack ready
+- AppleMusicService implements MusicService interface
+- Methods: initialize(), authorize(), loadArtistsWithAlbums()
 - Firebase Functions deployed with working token generation
-- Token endpoint: `https://us-central1-album-anniversaries.cloudfunctions.net/getAppleMusicToken`
-- Apple Music API accepts tokens (validated HTTP 200)
+- 163 tests passing
 - Phase 3 requirements: AUTH-01, AUTH-03, DATA-01, DATA-02, DATA-03
 - Quick depth = 3-5 phases, critical path only
 
 **Files to reference:**
-- `.planning/phases/03-apple-music-integration/03-01-SUMMARY.md` - MusicKit loader summary
+- `.planning/phases/03-apple-music-integration/03-02-SUMMARY.md` - AppleMusicService summary
+- `src/app/services/apple-music.service.ts` - Apple Music service implementation
 - `src/app/services/musickit-loader.service.ts` - MusicKit JS dynamic loader
 - `src/typings.d.ts` - MusicKit v3 TypeScript declarations
 - `functions/src/index.ts` - getAppleMusicToken callable function
@@ -255,4 +274,4 @@ None - all prerequisites for Phase 3 are complete.
 ---
 
 *State initialized: 2026-02-01*
-*Last updated: 2026-02-05*
+*Last updated: 2026-02-05 (Plan 03-02 complete)*
