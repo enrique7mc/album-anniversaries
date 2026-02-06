@@ -57,3 +57,19 @@
            hover:shadow-lg-dark transition-shadow duration-250;
   }
 }
+
+// Angular Material SnackBar styles
+.error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+.warning-snackbar {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
