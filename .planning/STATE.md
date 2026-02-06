@@ -21,9 +21,9 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 ## Current Position
 
 **Phase:** 4 of 4 (Production Validation) - IN PROGRESS
-**Plan:** 2 of ~3 complete (04-02-SUMMARY.md)
-**Status:** Phase 4 in progress - Production deployment configuration complete
-**Last activity:** 2026-02-06 - Completed Plan 04-02 (Production Deployment Configuration)
+**Plan:** 2 of ~3 complete (04-01-SUMMARY.md, 04-02-SUMMARY.md)
+**Status:** Phase 4 in progress - Error handling infrastructure and deployment configuration complete
+**Last activity:** 2026-02-06 - Completed Plan 04-01 (Error Handling Infrastructure)
 
 ### Progress Bar
 ```
@@ -51,9 +51,9 @@ Phase 4: [██░] 2/3 plans - IN PROGRESS
 **Plan 03-02 duration:** 3 min
 **Plan 03-03 duration:** 6 min
 **Plan 03-04 duration:** 20 min (verification + bug fixes)
-**Plan 04-01 duration:** TBD (parallel execution with 04-02)
+**Plan 04-01 duration:** 10 min
 **Plan 04-02 duration:** 4 min
-**Velocity:** 6.0 min/plan (sample size: 11)
+**Velocity:** 6.2 min/plan (sample size: 12)
 
 ---
 
@@ -75,6 +75,19 @@ Phase 4: [██░] 2/3 plans - IN PROGRESS
 - Static assets (images, JS, CSS): max-age=31536000 (1 year)
 - index.html: no-cache, no-store, must-revalidate
 - Security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+
+**2026-02-06: Angular Material for notifications**
+- Use Angular Material SnackBar for all user notifications
+- Error messages never auto-dismiss (require user acknowledgment)
+- Success messages auto-dismiss after 3 seconds
+- Warning messages auto-dismiss after 5 seconds
+- Color-coded styling: red (error), green (success), orange (warning)
+
+**2026-02-06: Token expiration checking**
+- Check token expiration within 1 day of expiry
+- Proactive re-authentication prompt improves UX
+- Pattern: `isTokenExpired()` checks if within 1 day buffer
+- Applied to Apple Music tokens (6-month expiry)
 
 **2026-02-06: Tailwind CSS version downgrade**
 - Downgraded from v4.1.18 to v3.4.19
@@ -216,16 +229,21 @@ None - Phase 4 in progress.
 
 ## Recent Activity
 
+**2026-02-06:** Completed Plan 04-01 (Error Handling Infrastructure)
+- Created NotificationService with Angular Material SnackBar
+- Added comprehensive error handling to AppleMusicService (handleError, handleAuthorizationError)
+- Implemented token expiration detection (within 1 day buffer)
+- Enhanced logout with complete token cleanup and success notification
+- Added 62 new tests (12 NotificationService + 45 AppleMusicService + 5 AppComponent)
+- Total 207 tests passing
+- Duration: 10 min
+
 **2026-02-06:** Completed Plan 04-02 (Production Deployment Configuration)
 - Updated firebase.json with cache headers and security headers
 - Added maxArtists configuration to environment files (dev: 20, prod: unlimited)
 - Downgraded Tailwind CSS from v4 to v3 for Angular 17 compatibility
 - Production build validated and passing all 182 tests
 - Duration: 4 min
-
-**2026-02-06:** Completed Plan 04-01 (NotificationService)
-- Created NotificationService with SnackBar integration
-- Duration: TBD (parallel with 04-02)
 
 **2026-02-05:** Completed Plan 03-04 (Integration Verification)
 - Fixed library vs catalog artist ID mismatch (added `&include=catalog`)
@@ -303,7 +321,7 @@ None - Phase 4 in progress.
 ## Session Continuity
 
 **Last session:** 2026-02-06
-**Stopped at:** Completed Plan 04-02 (Production Deployment Configuration)
+**Stopped at:** Completed Plan 04-01 (Error Handling Infrastructure)
 **Resume file:** None
 
 **For next session:**
@@ -313,16 +331,20 @@ None - Phase 4 in progress.
 
 **Context to preserve:**
 - Phases 1, 2 & 3 complete and verified
-- Phase 4 production deployment configuration complete
-- Firebase Hosting configured with cache headers
+- Phase 4: Error handling infrastructure and deployment configuration complete
+- NotificationService provides centralized user feedback (error/success/warning)
+- AppleMusicService has comprehensive error handling for all failure scenarios
+- Firebase Hosting configured with cache headers and security headers
 - Environment-based artist limits (dev: 20, prod: unlimited)
-- Production build validated with all 182 tests passing
+- All 207 tests passing
 - Tailwind CSS v3 compatible with Angular 17
 
 **Files to reference:**
+- `.planning/phases/04-production-validation/04-01-SUMMARY.md` - Error handling summary
 - `.planning/phases/04-production-validation/04-02-SUMMARY.md` - Deployment config summary
+- `src/app/services/notification.service.ts` - Centralized notification service
+- `src/app/services/apple-music.service.ts` - Error handling implementation
 - `firebase.json` - Hosting configuration with cache headers
-- `src/environments/environment.prod.ts` - Production environment with maxArtists: null
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 
 ---
