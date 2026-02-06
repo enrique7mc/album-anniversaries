@@ -26,13 +26,14 @@ import {
 import { SpotifyService } from './spotify.service';
 import { PkceService } from './pkce.service';
 import { GsapService } from './gsap.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { Artist } from './artist';
 import { Album } from './album';
 import { APP_CONFIG, AppConfig } from './app-config';
 import { MUSIC_SERVICE } from './services/music-service.token';
 import { MusicService } from './services/music-service.interface';
 import { AppleMusicService } from './services/apple-music.service';
+import { NotificationService } from './services/notification.service';
 import {
   Subscription,
   Subject,
@@ -102,6 +103,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
     private gsapService: GsapService,
+    private notificationService: NotificationService,
     @Inject(APP_CONFIG) private config: AppConfig,
   ) {
     this.title = config.title;
@@ -457,12 +459,24 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Logs out the user by clearing the stored token
+   * Logs out the user by clearing all tokens and resetting state
    */
   logout(): void {
     this.accessToken = null;
     this.activeProvider = null;
+
+    // Clear Spotify tokens
     this.clearStoredToken();
+
+    // Clear Apple Music tokens
+    sessionStorage.removeItem('apple_music_token');
+    sessionStorage.removeItem('apple_music_token_expiry');
+
+    // Reset observables to empty state
+    this.artists$ = of([]);
+    this.artistsWithRecentAlbums$ = of([]);
+
+    this.notificationService.showSuccess('Logged out successfully');
   }
 
   /**
@@ -501,7 +515,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     } catch (error) {
       console.error('Apple Music login failed:', error);
       this.appleMusicLoading = false;
-      // Could show error message to user here
+      // Error is already handled by AppleMusicService
     }
   }
 

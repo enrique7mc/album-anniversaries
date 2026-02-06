@@ -10,10 +10,12 @@ import { AlbumListItemComponent } from './album-list-item/album-list-item.compon
 import { Functions } from '@angular/fire/functions';
 import { MUSIC_SERVICE } from './services/music-service.token';
 import { AppleMusicService } from './services/apple-music.service';
+import { NotificationService } from './services/notification.service';
 import { of } from 'rxjs';
 
 describe('AppComponent', () => {
   let mockAppleMusicService: jasmine.SpyObj<AppleMusicService>;
+  let mockNotificationService: jasmine.SpyObj<NotificationService>;
 
   beforeEach(waitForAsync(() => {
     const spotifySpy = jasmine.createSpyObj('SpotifyService', [
@@ -32,11 +34,18 @@ describe('AppComponent', () => {
     );
     mockAppleMusicService.loadArtistsWithAlbums.and.returnValue(of(true));
 
+    mockNotificationService = jasmine.createSpyObj('NotificationService', [
+      'showSuccess',
+      'showError',
+      'showWarning',
+    ]);
+
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         { provide: SpotifyService, useValue: spotifySpy },
         { provide: AppleMusicService, useValue: mockAppleMusicService },
+        { provide: NotificationService, useValue: mockNotificationService },
         { provide: APP_CONFIG, useValue: SPOTIFY_APP_CONFIG },
         { provide: Functions, useValue: functionsSpy },
         PkceService,
@@ -151,6 +160,67 @@ describe('AppComponent', () => {
       app.loginAppleMusic();
 
       expect(app.appleMusicLoading).toBe(true);
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear all Spotify tokens', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+
+      // Set Spotify tokens
+      localStorage.setItem('spotify_access_token', 'test-spotify-token');
+      localStorage.setItem('spotify_token_expiry', '123456789');
+
+      app.logout();
+
+      expect(localStorage.getItem('spotify_access_token')).toBeNull();
+      expect(localStorage.getItem('spotify_token_expiry')).toBeNull();
+    });
+
+    it('should clear all Apple Music tokens', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+
+      // Set Apple Music tokens
+      sessionStorage.setItem('apple_music_token', 'test-apple-token');
+      sessionStorage.setItem('apple_music_token_expiry', '987654321');
+
+      app.logout();
+
+      expect(sessionStorage.getItem('apple_music_token')).toBeNull();
+      expect(sessionStorage.getItem('apple_music_token_expiry')).toBeNull();
+    });
+
+    it('should reset activeProvider to null', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+
+      app.activeProvider = 'spotify';
+      app.logout();
+
+      expect(app.activeProvider).toBeNull();
+    });
+
+    it('should reset accessToken to null', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+
+      app.accessToken = 'test-token';
+      app.logout();
+
+      expect(app.accessToken).toBeNull();
+    });
+
+    it('should show success notification', () => {
+      const fixture = TestBed.createComponent(AppComponent);
+      const app = fixture.componentInstance;
+
+      app.logout();
+
+      expect(mockNotificationService.showSuccess).toHaveBeenCalledWith(
+        'Logged out successfully',
+      );
     });
   });
 
