@@ -8,6 +8,7 @@ import { Album } from '../album';
 import { Image } from '../image';
 import { MusicService } from './music-service.interface';
 import { MusicKitLoaderService } from './musickit-loader.service';
+import { environment } from '../../environments/environment';
 
 // Constants
 const STORAGE_KEY_TOKEN = 'apple_music_token';
@@ -18,7 +19,7 @@ const RATE_LIMIT_DELAY_MS = 500; // 500ms between requests
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000; // Start with 1s, exponential backoff
 const API_LIMIT = 100;
-const MAX_ARTISTS = 20; // TODO: Remove this limit once rate limiting is optimized
+const MAX_ARTISTS = environment.maxArtists || Infinity;
 const STOREFRONT = 'us';
 
 // Image sizes for artwork conversion

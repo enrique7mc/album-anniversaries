@@ -12,4 +12,5 @@ export const environment = {
     storageBucket: 'album-anniversaries.appspot.com',
     messagingSenderId: '869867999570',
   },
+  maxArtists: null,
 };
