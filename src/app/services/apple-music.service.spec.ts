@@ -2,12 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { Functions } from '@angular/fire/functions';
 import { AppleMusicService } from './apple-music.service';
 import { MusicKitLoaderService } from './musickit-loader.service';
+import { NotificationService } from './notification.service';
 
 describe('AppleMusicService', () => {
   let service: AppleMusicService;
   let musicKitLoaderSpy: jasmine.SpyObj<MusicKitLoaderService>;
   let functionsSpy: jasmine.SpyObj<Functions>;
   let mockMusicKitInstance: jasmine.SpyObj<MusicKitInstance>;
+  let notificationServiceSpy: jasmine.SpyObj<NotificationService>;
 
   // Helper to create mock Apple Music artist resource
   const createMockArtistResource = (
@@ -59,11 +61,18 @@ describe('AppleMusicService', () => {
     ]);
     mockMusicKitInstance.api = jasmine.createSpyObj('MusicKitAPI', ['music']);
 
+    notificationServiceSpy = jasmine.createSpyObj('NotificationService', [
+      'showError',
+      'showSuccess',
+      'showWarning',
+    ]);
+
     TestBed.configureTestingModule({
       providers: [
         AppleMusicService,
         { provide: MusicKitLoaderService, useValue: musicKitLoaderSpy },
         { provide: Functions, useValue: functionsSpy },
+        { provide: NotificationService, useValue: notificationServiceSpy },
       ],
     });
 
@@ -390,6 +399,10 @@ describe('AppleMusicService', () => {
       (service as any).initialized = true;
       (service as any).musicKitInstance = mockMusicKitInstance;
 
+      // Set valid token expiry
+      const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+      sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
+
       const mockArtists = [
         createMockArtistResource('artist-1', 'Artist One'),
         createMockArtistResource('artist-2', 'Artist Two'),
@@ -431,6 +444,10 @@ describe('AppleMusicService', () => {
       (service as any).initialized = true;
       (service as any).musicKitInstance = mockMusicKitInstance;
 
+      // Set valid token expiry
+      const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+      sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
+
       (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
         Promise.resolve({ data: [] }),
       );
@@ -445,6 +462,10 @@ describe('AppleMusicService', () => {
       (service as any).initialized = true;
       (service as any).musicKitInstance = mockMusicKitInstance;
 
+      // Set valid token expiry
+      const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+      sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
+
       (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
         Promise.reject(new Error('API Error')),
       );
@@ -454,6 +475,7 @@ describe('AppleMusicService', () => {
       service.loadArtistsWithAlbums('test-token').subscribe((result) => {
         expect(result).toBe(false);
         expect(console.error).toHaveBeenCalled();
+        expect(notificationServiceSpy.showError).toHaveBeenCalled();
         done();
       });
     });
@@ -570,6 +592,251 @@ describe('AppleMusicService', () => {
 
       expect(duration).toBeGreaterThanOrEqual(95);
       expect(duration).toBeLessThan(200);
+    });
+  });
+
+  describe('Error handling', () => {
+    describe('handleError', () => {
+      it('should show subscription error for 403 status', () => {
+        const error = { status: 403 };
+        (service as any).handleError(error, 'testing');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Apple Music subscription required to view your library.',
+        );
+      });
+
+      it('should show subscription error for NO_SUBSCRIPTION errorCode', () => {
+        const error = { errorCode: 'NO_SUBSCRIPTION' };
+        (service as any).handleError(error, 'testing');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Apple Music subscription required to view your library.',
+        );
+      });
+
+      it('should show expired session error for 401 status', () => {
+        // Set valid token so isTokenExpired returns false
+        const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          futureTime.toString(),
+        );
+
+        const error = { status: 401 };
+        (service as any).handleError(error, 'testing');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Session expired. Please sign in again.',
+        );
+      });
+
+      it('should clear token when session expired', () => {
+        sessionStorage.setItem('apple_music_token', 'test-token');
+        sessionStorage.setItem('apple_music_token_expiry', '123456789');
+
+        const error = { status: 401 };
+        (service as any).handleError(error, 'testing');
+
+        expect(sessionStorage.getItem('apple_music_token')).toBeNull();
+        expect(sessionStorage.getItem('apple_music_token_expiry')).toBeNull();
+      });
+
+      it('should show rate limit error for 429 status', () => {
+        // Set valid token so isTokenExpired returns false
+        const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          futureTime.toString(),
+        );
+
+        const error = { status: 429 };
+        (service as any).handleError(error, 'testing');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Too many requests. Please wait a moment and try again.',
+        );
+      });
+
+      it('should show offline error when no internet connection', () => {
+        // Set valid token so isTokenExpired returns false
+        const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          futureTime.toString(),
+        );
+
+        spyOnProperty(navigator, 'onLine').and.returnValue(false);
+        const error = { status: 500 };
+        (service as any).handleError(error, 'testing');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'No internet connection. Please check your network.',
+        );
+      });
+
+      it('should show generic error for unknown errors', () => {
+        // Set valid token so isTokenExpired returns false
+        const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          futureTime.toString(),
+        );
+
+        const error = { status: 500 };
+        (service as any).handleError(error, 'loading data');
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Failed loading data. Please try again later.',
+        );
+      });
+    });
+
+    describe('handleAuthorizationError', () => {
+      it('should show popup blocked error', () => {
+        const error = { message: 'popup blocked' };
+        (service as any).handleAuthorizationError(error);
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Popup blocked. Please allow popups and try again.',
+        );
+      });
+
+      it('should show private browsing error', () => {
+        const error = { message: 'referrer policy' };
+        (service as any).handleAuthorizationError(error);
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Private Browsing detected. Please disable Private Browsing.',
+        );
+      });
+
+      it('should show cancelled error', () => {
+        const error = { errorCode: 'USER_CANCELLED' };
+        (service as any).handleAuthorizationError(error);
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Sign-in cancelled.',
+        );
+      });
+
+      it('should show generic auth error for unknown errors', () => {
+        const error = { message: 'unknown error' };
+        (service as any).handleAuthorizationError(error);
+
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Apple Music sign-in failed. Please try again.',
+        );
+      });
+    });
+
+    describe('isTokenExpired', () => {
+      it('should return true if no expiry stored', () => {
+        sessionStorage.removeItem('apple_music_token_expiry');
+        expect((service as any).isTokenExpired()).toBe(true);
+      });
+
+      it('should return true if token expired', () => {
+        const pastTime = Date.now() - 1000;
+        sessionStorage.setItem('apple_music_token_expiry', pastTime.toString());
+        expect((service as any).isTokenExpired()).toBe(true);
+      });
+
+      it('should return true if token expiring within 1 day', () => {
+        const almostExpired = Date.now() + 12 * 60 * 60 * 1000; // 12 hours
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          almostExpired.toString(),
+        );
+        expect((service as any).isTokenExpired()).toBe(true);
+      });
+
+      it('should return false if token has more than 1 day left', () => {
+        const futureTime = Date.now() + 2 * 24 * 60 * 60 * 1000; // 2 days
+        sessionStorage.setItem(
+          'apple_music_token_expiry',
+          futureTime.toString(),
+        );
+        expect((service as any).isTokenExpired()).toBe(false);
+      });
+    });
+
+    describe('clearStoredToken', () => {
+      it('should remove token and expiry from sessionStorage', () => {
+        sessionStorage.setItem('apple_music_token', 'test-token');
+        sessionStorage.setItem('apple_music_token_expiry', '123456789');
+
+        (service as any).clearStoredToken();
+
+        expect(sessionStorage.getItem('apple_music_token')).toBeNull();
+        expect(sessionStorage.getItem('apple_music_token_expiry')).toBeNull();
+      });
+    });
+  });
+
+  describe('authorize() with error handling', () => {
+    it('should show success notification on successful authorization', async () => {
+      (service as any).initialized = true;
+      (service as any).musicKitInstance = mockMusicKitInstance;
+      mockMusicKitInstance.authorize.and.returnValue(
+        Promise.resolve('test-token'),
+      );
+
+      await service.authorize();
+
+      expect(notificationServiceSpy.showSuccess).toHaveBeenCalledWith(
+        'Signed in to Apple Music',
+      );
+    });
+
+    it('should handle authorization error and rethrow', async () => {
+      (service as any).initialized = true;
+      (service as any).musicKitInstance = mockMusicKitInstance;
+      const error = new Error('popup blocked');
+      mockMusicKitInstance.authorize.and.returnValue(Promise.reject(error));
+
+      await expectAsync(service.authorize()).toBeRejected();
+      expect(notificationServiceSpy.showError).toHaveBeenCalled();
+    });
+  });
+
+  describe('loadArtistsWithAlbums() with error handling', () => {
+    it('should check token expiration before loading', (done) => {
+      (service as any).initialized = true;
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      // Set expired token
+      sessionStorage.setItem('apple_music_token_expiry', '123456789');
+
+      service.loadArtistsWithAlbums('test-token').subscribe((result) => {
+        expect(result).toBe(false);
+        expect(notificationServiceSpy.showWarning).toHaveBeenCalledWith(
+          'Session expired. Please sign in again.',
+        );
+        done();
+      });
+    });
+
+    it('should handle errors via handleError method', (done) => {
+      (service as any).initialized = true;
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      // Set valid token
+      const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
+      sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
+
+      const error = { status: 403 };
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.reject(error),
+      );
+
+      service.loadArtistsWithAlbums('test-token').subscribe((result) => {
+        expect(result).toBe(false);
+        expect(notificationServiceSpy.showError).toHaveBeenCalledWith(
+          'Apple Music subscription required to view your library.',
+        );
+        done();
+      });
     });
   });
 });

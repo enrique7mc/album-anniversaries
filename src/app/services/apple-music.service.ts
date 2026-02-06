@@ -8,6 +8,7 @@ import { Album } from '../album';
 import { Image } from '../image';
 import { MusicService } from './music-service.interface';
 import { MusicKitLoaderService } from './musickit-loader.service';
+import { NotificationService } from './notification.service';
 import { environment } from '../../environments/environment';
 
 // Constants
@@ -98,6 +99,7 @@ export class AppleMusicService implements MusicService {
   constructor(
     private musicKitLoader: MusicKitLoaderService,
     private functions: Functions,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -154,15 +156,22 @@ export class AppleMusicService implements MusicService {
       );
     }
 
-    // Authorize user via MusicKit popup
-    const musicUserToken = await this.musicKitInstance.authorize();
+    try {
+      // Authorize user via MusicKit popup
+      const musicUserToken = await this.musicKitInstance.authorize();
 
-    // Store token with 6-month expiry in sessionStorage
-    const expiry = Date.now() + TOKEN_EXPIRY_MS;
-    sessionStorage.setItem(STORAGE_KEY_TOKEN, musicUserToken);
-    sessionStorage.setItem(STORAGE_KEY_TOKEN_EXPIRY, expiry.toString());
+      // Store token with 6-month expiry in sessionStorage
+      const expiry = Date.now() + TOKEN_EXPIRY_MS;
+      sessionStorage.setItem(STORAGE_KEY_TOKEN, musicUserToken);
+      sessionStorage.setItem(STORAGE_KEY_TOKEN_EXPIRY, expiry.toString());
 
-    return musicUserToken;
+      this.notificationService.showSuccess('Signed in to Apple Music');
+
+      return musicUserToken;
+    } catch (error) {
+      this.handleAuthorizationError(error);
+      throw error;
+    }
   }
 
   /**
@@ -179,6 +188,15 @@ export class AppleMusicService implements MusicService {
       return of(false);
     }
 
+    // Check if token is expired
+    if (this.isTokenExpired()) {
+      this.notificationService.showWarning(
+        'Session expired. Please sign in again.',
+      );
+      this.clearStoredToken();
+      return of(false);
+    }
+
     return from(this.fetchAllLibraryArtists()).pipe(
       switchMap((libraryArtists) =>
         this.fetchAlbumsForAllArtists(libraryArtists),
@@ -188,7 +206,7 @@ export class AppleMusicService implements MusicService {
         return true;
       }),
       catchError((error) => {
-        console.error('[AppleMusicService] Error loading artists:', error);
+        this.handleError(error, 'loading library');
         return of(false);
       }),
     );
@@ -459,6 +477,102 @@ export class AppleMusicService implements MusicService {
       images: this.mapArtwork(attributes?.artwork),
       external_url: attributes?.url || '',
     };
+  }
+
+  /**
+   * Handles errors from Apple Music API with user-friendly messages.
+   *
+   * @param error - The error object from API
+   * @param context - Context description for error message
+   */
+  private handleError(error: any, context: string): void {
+    const err = error as Record<string, unknown>;
+    let message: string;
+
+    // Check for specific error codes
+    if (err.errorCode === 'NO_SUBSCRIPTION' || err.status === 403) {
+      message = 'Apple Music subscription required to view your library.';
+    } else if (
+      err.errorCode === 'TOKEN_EXPIRED' ||
+      err.status === 401 ||
+      this.isTokenExpired()
+    ) {
+      message = 'Session expired. Please sign in again.';
+      this.clearStoredToken();
+    } else if (err.status === 429 || this.isRateLimitError(error)) {
+      message = 'Too many requests. Please wait a moment and try again.';
+    } else if (!navigator.onLine) {
+      message = 'No internet connection. Please check your network.';
+    } else if (
+      typeof err.message === 'string' &&
+      err.message.includes('musickitloaded')
+    ) {
+      message = 'Failed to load Apple Music. Please refresh the page.';
+    } else if (err.errorCode === 'POPUP_BLOCKED') {
+      message =
+        'Popup blocked. Please allow popups for this site and try again.';
+    } else {
+      message = `Failed ${context}. Please try again later.`;
+    }
+
+    console.error(`[AppleMusicService] ${context}:`, error);
+    this.notificationService.showError(message);
+  }
+
+  /**
+   * Handles authorization-specific errors with user-friendly messages.
+   *
+   * @param error - The error object from authorization
+   */
+  private handleAuthorizationError(error: any): void {
+    const err = error as Record<string, unknown>;
+    let message: string;
+
+    if (
+      typeof err.message === 'string' &&
+      (err.message.includes('popup') || err.message.includes('blocked'))
+    ) {
+      message = 'Popup blocked. Please allow popups and try again.';
+    } else if (
+      typeof err.message === 'string' &&
+      (err.message.includes('referrer') || err.message.includes('opener'))
+    ) {
+      message = 'Private Browsing detected. Please disable Private Browsing.';
+    } else if (err.errorCode === 'USER_CANCELLED') {
+      message = 'Sign-in cancelled.';
+    } else {
+      message = 'Apple Music sign-in failed. Please try again.';
+    }
+
+    console.error('[AppleMusicService] Authorization error:', error);
+    this.notificationService.showError(message);
+  }
+
+  /**
+   * Checks if the stored token is expired or within 1 day of expiry.
+   *
+   * @returns true if token is expired or expiring soon
+   */
+  private isTokenExpired(): boolean {
+    const expiryStr = sessionStorage.getItem(STORAGE_KEY_TOKEN_EXPIRY);
+    if (!expiryStr) {
+      return true;
+    }
+
+    const expiryTime = parseInt(expiryStr, 10);
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    // Consider expired if within 1 day of expiry
+    return now >= expiryTime - oneDayMs;
+  }
+
+  /**
+   * Clears stored token and expiry from sessionStorage.
+   */
+  private clearStoredToken(): void {
+    sessionStorage.removeItem(STORAGE_KEY_TOKEN);
+    sessionStorage.removeItem(STORAGE_KEY_TOKEN_EXPIRY);
   }
 
   /**
