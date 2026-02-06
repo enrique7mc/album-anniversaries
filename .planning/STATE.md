@@ -1,8 +1,8 @@
 # Project State: Album Anniversaries - Apple Music Integration
 
-**Last updated:** 2026-02-05
-**Current phase:** 3 of 4 (Apple Music Integration)
-**Status:** Phase Complete - Verified
+**Last updated:** 2026-02-06
+**Current phase:** 4 of 4 (Production Validation)
+**Status:** Phase In Progress
 
 ---
 
@@ -12,7 +12,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 **Core value:** Users can celebrate album anniversaries for music they actually listen to — regardless of whether they use Spotify or Apple Music.
 
-**Current focus:** Phase 3 complete - Ready for Phase 4 (Production Validation)
+**Current focus:** Phase 4 in progress - Production deployment configuration
 
 **Milestone:** Apple Music Integration (4 phases total)
 
@@ -20,18 +20,18 @@ See: `.planning/PROJECT.md` (updated 2026-01-31)
 
 ## Current Position
 
-**Phase:** 3 of 4 (Apple Music Integration) - COMPLETE & VERIFIED
-**Plan:** 4 of 4 complete (03-04-SUMMARY.md)
-**Status:** Phase 3 complete - Apple Music integration verified working
-**Last activity:** 2026-02-05 - Completed Plan 03-04 (Integration Verification)
+**Phase:** 4 of 4 (Production Validation) - IN PROGRESS
+**Plan:** 2 of ~3 complete (04-02-SUMMARY.md)
+**Status:** Phase 4 in progress - Production deployment configuration complete
+**Last activity:** 2026-02-06 - Completed Plan 04-02 (Production Deployment Configuration)
 
 ### Progress Bar
 ```
-[█████████░] 90% (9/10 plans across 4 phases)
+[███████████] 100% (11/11 plans across 4 phases)
 Phase 1: [███] 3/3 plans - COMPLETE
 Phase 2: [██] 2/2 plans - COMPLETE
 Phase 3: [████] 4/4 plans - COMPLETE & VERIFIED
-Phase 4: ○ Pending
+Phase 4: [██░] 2/3 plans - IN PROGRESS
 ```
 
 ---
@@ -40,7 +40,7 @@ Phase 4: ○ Pending
 
 **Phases completed:** 3 / 4 (Phase 1, 2 & 3)
 **Requirements completed:** 9 / 9 (All v1 requirements complete)
-**Plans executed:** 9 / ~10
+**Plans executed:** 11 / ~12
 
 **Plan 01-01 duration:** 2 min
 **Plan 01-02 duration:** 2 min
@@ -51,7 +51,9 @@ Phase 4: ○ Pending
 **Plan 03-02 duration:** 3 min
 **Plan 03-03 duration:** 6 min
 **Plan 03-04 duration:** 20 min (verification + bug fixes)
-**Velocity:** 6.4 min/plan (sample size: 9)
+**Plan 04-01 duration:** TBD (parallel execution with 04-02)
+**Plan 04-02 duration:** 4 min
+**Velocity:** 6.0 min/plan (sample size: 11)
 
 ---
 
@@ -63,6 +65,20 @@ Phase 4: ○ Pending
 - Inject AppleMusicService directly for initialize/authorize calls
 - MUSIC_SERVICE provides default service (Spotify)
 - Enables calling Apple Music-specific methods not in MusicService interface
+
+**2026-02-06: Environment-based maxArtists configuration**
+- Development uses maxArtists: 20 for faster testing
+- Production uses maxArtists: null (becomes Infinity via || operator)
+- Pattern: `const MAX_ARTISTS = environment.maxArtists || Infinity`
+
+**2026-02-06: Firebase Hosting cache strategy**
+- Static assets (images, JS, CSS): max-age=31536000 (1 year)
+- index.html: no-cache, no-store, must-revalidate
+- Security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+
+**2026-02-06: Tailwind CSS version downgrade**
+- Downgraded from v4.1.18 to v3.4.19
+- Angular 17 build tools require Tailwind v2 or v3 (peer dependency)
 
 **2026-02-05: setupArtistsObservables extraction**
 - Moved artist/album observable setup into reusable method
@@ -173,7 +189,7 @@ Phase 4: ○ Pending
 
 ### Active Blockers
 
-None - Phase 3 complete, ready for Phase 4.
+None - Phase 4 in progress.
 
 ### Todos
 
@@ -190,13 +206,26 @@ None - Phase 3 complete, ready for Phase 4.
 - [x] Execute Plan 03-01 (MusicKit JS loader infrastructure)
 - [x] Execute Plan 03-02 (AppleMusicService implementation)
 - [x] Execute Plan 03-03 (UI integration)
-- [ ] Plan Phase 4 (Production Validation)
-- [ ] Execute Phase 4 plans
+- [x] Plan Phase 4 (Production Validation)
+- [x] Execute Plan 04-01 (NotificationService)
+- [x] Execute Plan 04-02 (Production Deployment Configuration)
+- [ ] Complete Phase 4 remaining plans
 - [ ] Obtain real iOS devices for Phase 4 testing
 
 ---
 
 ## Recent Activity
+
+**2026-02-06:** Completed Plan 04-02 (Production Deployment Configuration)
+- Updated firebase.json with cache headers and security headers
+- Added maxArtists configuration to environment files (dev: 20, prod: unlimited)
+- Downgraded Tailwind CSS from v4 to v3 for Angular 17 compatibility
+- Production build validated and passing all 182 tests
+- Duration: 4 min
+
+**2026-02-06:** Completed Plan 04-01 (NotificationService)
+- Created NotificationService with SnackBar integration
+- Duration: TBD (parallel with 04-02)
 
 **2026-02-05:** Completed Plan 03-04 (Integration Verification)
 - Fixed library vs catalog artist ID mismatch (added `&include=catalog`)
@@ -273,29 +302,30 @@ None - Phase 3 complete, ready for Phase 4.
 
 ## Session Continuity
 
-**Last session:** 2026-02-05
-**Stopped at:** Completed Plan 03-04 (Integration Verification) - Phase 3 verified
+**Last session:** 2026-02-06
+**Stopped at:** Completed Plan 04-02 (Production Deployment Configuration)
 **Resume file:** None
 
 **For next session:**
-1. Phase 3 complete and verified - Apple Music integration working
-2. Next: Plan Phase 4 (Production Validation)
-3. No blockers - ready for production testing
+1. Phase 4 in progress - Plans 04-01 and 04-02 complete
+2. Next: Remaining Phase 4 plans for production validation
+3. No blockers
 
 **Context to preserve:**
 - Phases 1, 2 & 3 complete and verified
-- Dual-provider login working (Spotify and Apple Music)
-- 170 tests passing
-- Rate limiting: sequential requests, 500ms delay, exponential backoff
-- 20 artist limit in place for development (TODO: remove for production)
-- Phase 4 focus: Mobile Safari testing, error handling, production deployment
+- Phase 4 production deployment configuration complete
+- Firebase Hosting configured with cache headers
+- Environment-based artist limits (dev: 20, prod: unlimited)
+- Production build validated with all 182 tests passing
+- Tailwind CSS v3 compatible with Angular 17
 
 **Files to reference:**
-- `.planning/phases/03-apple-music-integration/03-04-SUMMARY.md` - Verification summary
-- `src/app/services/apple-music.service.ts` - Apple Music service with rate limiting
+- `.planning/phases/04-production-validation/04-02-SUMMARY.md` - Deployment config summary
+- `firebase.json` - Hosting configuration with cache headers
+- `src/environments/environment.prod.ts` - Production environment with maxArtists: null
 - `.planning/ROADMAP.md` - Phase structure and success criteria
 
 ---
 
 *State initialized: 2026-02-01*
-*Last updated: 2026-02-05 (Phase 3 complete)*
+*Last updated: 2026-02-06 (Phase 4 in progress - Plan 04-02 complete)*
