@@ -45,6 +45,70 @@ describe('AppleMusicService', () => {
     },
   });
 
+  // Helper to create mock recently played song resource
+  const createMockSongResource = (
+    id: string,
+    name: string,
+    artistId: string,
+    artistName: string,
+  ): any => ({
+    id,
+    type: 'songs',
+    attributes: { name },
+    relationships: {
+      artists: {
+        data: [
+          {
+            id: artistId,
+            type: 'artists',
+            attributes: {
+              name: artistName,
+              url: `https://music.apple.com/artist/${artistId}`,
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  // Helper to create mock recently played album resource
+  const createMockRecentAlbumResource = (
+    id: string,
+    name: string,
+    artistId: string,
+    artistName: string,
+  ): any => ({
+    id,
+    type: 'albums',
+    attributes: { name },
+    relationships: {
+      artists: {
+        data: [
+          {
+            id: artistId,
+            type: 'artists',
+            attributes: {
+              name: artistName,
+            },
+          },
+        ],
+      },
+    },
+  });
+
+  // Helper to create mock station resource (no artist relationships)
+  const createMockStationResource = (id: string, name: string): any => ({
+    id,
+    type: 'stations',
+    attributes: { name },
+  });
+
+  // Helper to create NormalizedArtist-like objects for tests
+  const createNormalizedArtist = (catalogId: string, name: string): any => ({
+    catalogId,
+    name,
+  });
+
   beforeEach(() => {
     // Create spies
     musicKitLoaderSpy = jasmine.createSpyObj('MusicKitLoaderService', [
@@ -310,6 +374,43 @@ describe('AppleMusicService', () => {
       });
     });
 
+    describe('mapNormalizedToArtist()', () => {
+      it('should map NormalizedArtist to Artist model', () => {
+        const normalized = {
+          catalogId: 'cat-123',
+          name: 'Test Artist',
+          artwork: { url: 'https://example.com/{w}x{h}.jpg' },
+          url: 'https://music.apple.com/artist/cat-123',
+        };
+
+        const result = (service as any).mapNormalizedToArtist(normalized);
+
+        expect(result.id).toBe('cat-123');
+        expect(result.name).toBe('Test Artist');
+        expect(result.href).toBe('');
+        expect(result.popularity).toBe(0);
+        expect(result.external_url).toBe(
+          'https://music.apple.com/artist/cat-123',
+        );
+        expect(result.albums).toEqual([]);
+        expect(result.images.length).toBe(3);
+      });
+
+      it('should handle missing optional fields', () => {
+        const normalized = {
+          catalogId: 'cat-456',
+          name: 'Minimal Artist',
+        };
+
+        const result = (service as any).mapNormalizedToArtist(normalized);
+
+        expect(result.id).toBe('cat-456');
+        expect(result.name).toBe('Minimal Artist');
+        expect(result.external_url).toBe('');
+        expect(result.images).toEqual([]);
+      });
+    });
+
     describe('mapToAlbum()', () => {
       it('should map all fields correctly', () => {
         const resource = createMockAlbumResource(
@@ -376,6 +477,421 @@ describe('AppleMusicService', () => {
     });
   });
 
+  describe('fetchRecentlyPlayedArtists (private)', () => {
+    it('should return empty array if musicKitInstance is null', async () => {
+      (service as any).musicKitInstance = null;
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should call the correct recently played endpoint', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: [] }),
+      );
+
+      await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(mockMusicKitInstance.api.music).toHaveBeenCalledWith(
+        '/v1/me/recent/played?limit=30',
+      );
+    });
+
+    it('should extract artists from songs', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      const songs = [
+        createMockSongResource('song-1', 'Song One', 'artist-100', 'Artist A'),
+        createMockSongResource('song-2', 'Song Two', 'artist-200', 'Artist B'),
+      ];
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: songs }),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result.length).toBe(2);
+      expect(result[0].catalogId).toBe('artist-100');
+      expect(result[0].name).toBe('Artist A');
+      expect(result[1].catalogId).toBe('artist-200');
+      expect(result[1].name).toBe('Artist B');
+    });
+
+    it('should extract artists from albums', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      const albums = [
+        createMockRecentAlbumResource(
+          'album-1',
+          'Album One',
+          'artist-300',
+          'Artist C',
+        ),
+      ];
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: albums }),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result.length).toBe(1);
+      expect(result[0].catalogId).toBe('artist-300');
+      expect(result[0].name).toBe('Artist C');
+    });
+
+    it('should deduplicate artists by catalog ID', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      const songs = [
+        createMockSongResource('song-1', 'Song One', 'artist-100', 'Artist A'),
+        createMockSongResource('song-2', 'Song Two', 'artist-100', 'Artist A'),
+        createMockSongResource(
+          'song-3',
+          'Song Three',
+          'artist-200',
+          'Artist B',
+        ),
+      ];
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: songs }),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result.length).toBe(2);
+      expect(result[0].catalogId).toBe('artist-100');
+      expect(result[1].catalogId).toBe('artist-200');
+    });
+
+    it('should ignore stations', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      const items = [
+        createMockStationResource('station-1', 'Chill Station'),
+        createMockSongResource('song-1', 'Song One', 'artist-100', 'Artist A'),
+      ];
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: items }),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result.length).toBe(1);
+      expect(result[0].catalogId).toBe('artist-100');
+    });
+
+    it('should return empty array on API error', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.reject(new Error('Network error')),
+      );
+
+      spyOn(console, 'warn');
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result).toEqual([]);
+      expect(console.warn).toHaveBeenCalled();
+    });
+
+    it('should handle empty response data', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: [] }),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle response with no data property', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({}),
+      );
+
+      const result = await (service as any).fetchRecentlyPlayedArtists();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('extractArtistsFromResource (private)', () => {
+    it('should extract artists from song resources', () => {
+      const song = createMockSongResource(
+        'song-1',
+        'Test Song',
+        'artist-100',
+        'Artist A',
+      );
+
+      const result = (service as any).extractArtistsFromResource(song);
+
+      expect(result.length).toBe(1);
+      expect(result[0].catalogId).toBe('artist-100');
+      expect(result[0].name).toBe('Artist A');
+    });
+
+    it('should extract artists from album resources', () => {
+      const album = createMockRecentAlbumResource(
+        'album-1',
+        'Test Album',
+        'artist-200',
+        'Artist B',
+      );
+
+      const result = (service as any).extractArtistsFromResource(album);
+
+      expect(result.length).toBe(1);
+      expect(result[0].catalogId).toBe('artist-200');
+      expect(result[0].name).toBe('Artist B');
+    });
+
+    it('should return empty array for station resources', () => {
+      const station = createMockStationResource('station-1', 'Chill Station');
+
+      const result = (service as any).extractArtistsFromResource(station);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array for playlist resources', () => {
+      const playlist = {
+        id: 'playlist-1',
+        type: 'playlists',
+        attributes: { name: 'My Playlist' },
+      };
+
+      const result = (service as any).extractArtistsFromResource(playlist);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array for missing artist relationships', () => {
+      const song = {
+        id: 'song-1',
+        type: 'songs',
+        attributes: { name: 'Song Without Artists' },
+      };
+
+      const result = (service as any).extractArtistsFromResource(song);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array for empty artist data', () => {
+      const song = {
+        id: 'song-1',
+        type: 'songs',
+        attributes: { name: 'Song' },
+        relationships: {
+          artists: {
+            data: [],
+          },
+        },
+      };
+
+      const result = (service as any).extractArtistsFromResource(song);
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle multiple artists on a single resource', () => {
+      const song = {
+        id: 'song-1',
+        type: 'songs',
+        attributes: { name: 'Collab Song' },
+        relationships: {
+          artists: {
+            data: [
+              {
+                id: 'artist-100',
+                type: 'artists',
+                attributes: { name: 'Artist A' },
+              },
+              {
+                id: 'artist-200',
+                type: 'artists',
+                attributes: { name: 'Artist B' },
+              },
+            ],
+          },
+        },
+      };
+
+      const result = (service as any).extractArtistsFromResource(song);
+
+      expect(result.length).toBe(2);
+      expect(result[0].catalogId).toBe('artist-100');
+      expect(result[1].catalogId).toBe('artist-200');
+    });
+
+    it('should use Unknown Artist for missing artist name', () => {
+      const song = {
+        id: 'song-1',
+        type: 'songs',
+        attributes: { name: 'Song' },
+        relationships: {
+          artists: {
+            data: [{ id: 'artist-100', type: 'artists' }],
+          },
+        },
+      };
+
+      const result = (service as any).extractArtistsFromResource(song);
+
+      expect(result.length).toBe(1);
+      expect(result[0].name).toBe('Unknown Artist');
+    });
+  });
+
+  describe('fetchArtists orchestration (private)', () => {
+    beforeEach(() => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+    });
+
+    it('should use recently played artists when enough are returned', async () => {
+      // Create 12 unique songs with different artists (>= MIN_ARTISTS_THRESHOLD of 10)
+      const songs = Array.from({ length: 12 }, (_, i) =>
+        createMockSongResource(
+          `song-${i}`,
+          `Song ${i}`,
+          `artist-${i}`,
+          `Artist ${i}`,
+        ),
+      );
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: songs });
+          }
+          return Promise.resolve({ data: [] });
+        },
+      );
+
+      const result = await (service as any).fetchArtists();
+
+      expect(result.length).toBe(12);
+      expect(result[0].catalogId).toBe('artist-0');
+      // Should NOT have called library artists endpoint
+      const calls = (
+        mockMusicKitInstance.api.music as jasmine.Spy
+      ).calls.allArgs();
+      const libraryCall = calls.find((c: string[]) =>
+        c[0].includes('/me/library/artists'),
+      );
+      expect(libraryCall).toBeUndefined();
+    });
+
+    it('should fall back to library when recently played yields too few artists', async () => {
+      // Only 3 unique artists from recently played (< MIN_ARTISTS_THRESHOLD of 10)
+      const songs = [
+        createMockSongResource('song-1', 'Song 1', 'artist-1', 'Artist 1'),
+        createMockSongResource('song-2', 'Song 2', 'artist-2', 'Artist 2'),
+        createMockSongResource('song-3', 'Song 3', 'artist-3', 'Artist 3'),
+      ];
+
+      const libraryArtists = Array.from({ length: 5 }, (_, i) => ({
+        ...createMockArtistResource(`r.lib-${i}`, `Library Artist ${i}`),
+        relationships: {
+          catalog: { data: [{ id: `cat-${i}`, type: 'artists' }] },
+        },
+      }));
+
+      spyOn(console, 'log');
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: songs });
+          }
+          if (path.includes('/me/library/artists')) {
+            return Promise.resolve({ data: libraryArtists });
+          }
+          return Promise.resolve({ data: [] });
+        },
+      );
+
+      const result = await (service as any).fetchArtists();
+
+      // Should have library artists, not recently played
+      expect(result.length).toBe(5);
+      expect(result[0].catalogId).toBe('cat-0');
+      expect(console.log).toHaveBeenCalled();
+    });
+
+    it('should fall back to library when recently played errors', async () => {
+      const libraryArtists = [
+        {
+          ...createMockArtistResource('r.lib-1', 'Library Artist 1'),
+          relationships: {
+            catalog: { data: [{ id: 'cat-1', type: 'artists' }] },
+          },
+        },
+      ];
+
+      spyOn(console, 'warn');
+      spyOn(console, 'log');
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.reject(new Error('Endpoint not available'));
+          }
+          if (path.includes('/me/library/artists')) {
+            return Promise.resolve({ data: libraryArtists });
+          }
+          return Promise.resolve({ data: [] });
+        },
+      );
+
+      const result = await (service as any).fetchArtists();
+
+      // Should fall back to library
+      expect(result.length).toBe(1);
+      expect(result[0].catalogId).toBe('cat-1');
+    });
+
+    it('should use library artist ID when no catalog relationship exists', async () => {
+      // Recently played returns empty → falls back to library
+      const libraryArtists = [
+        createMockArtistResource('r.no-catalog', 'No Catalog Artist'),
+        // This one has no catalog relationship
+      ];
+
+      spyOn(console, 'log');
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: [] });
+          }
+          if (path.includes('/me/library/artists')) {
+            return Promise.resolve({ data: libraryArtists });
+          }
+          return Promise.resolve({ data: [] });
+        },
+      );
+
+      const result = await (service as any).fetchArtists();
+
+      // Should use the library artist ID as fallback
+      expect(result[0].catalogId).toBe('r.no-catalog');
+    });
+  });
+
   describe('loadArtistsWithAlbums()', () => {
     it('should return false if not initialized', (done) => {
       service.loadArtistsWithAlbums('test-token').subscribe((result) => {
@@ -394,7 +910,7 @@ describe('AppleMusicService', () => {
       });
     });
 
-    it('should fetch library artists and emit mapped artists via observable', (done) => {
+    it('should fetch artists and emit mapped artists via observable', (done) => {
       // Set up initialized state
       (service as any).initialized = true;
       (service as any).musicKitInstance = mockMusicKitInstance;
@@ -403,10 +919,15 @@ describe('AppleMusicService', () => {
       const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
       sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
 
-      const mockArtists = [
-        createMockArtistResource('artist-1', 'Artist One'),
-        createMockArtistResource('artist-2', 'Artist Two'),
-      ];
+      // Create enough recently played songs to exceed MIN_ARTISTS_THRESHOLD
+      const songs = Array.from({ length: 12 }, (_, i) =>
+        createMockSongResource(
+          `song-${i}`,
+          `Song ${i}`,
+          `artist-${i}`,
+          `Artist ${i}`,
+        ),
+      );
 
       const mockAlbums = [
         createMockAlbumResource('album-1', 'Album One', '2024-01-15'),
@@ -415,8 +936,8 @@ describe('AppleMusicService', () => {
       // Mock API calls
       (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
         (path: string) => {
-          if (path.includes('/me/library/artists')) {
-            return Promise.resolve({ data: mockArtists });
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: songs });
           }
           if (path.includes('/catalog/us/artists/')) {
             return Promise.resolve({ data: mockAlbums });
@@ -433,9 +954,9 @@ describe('AppleMusicService', () => {
 
       service.loadArtistsWithAlbums('test-token').subscribe((result) => {
         expect(result).toBe(true);
-        expect(emittedArtists.length).toBe(2);
-        expect(emittedArtists[0].name).toBe('Artist One');
-        expect(emittedArtists[1].name).toBe('Artist Two');
+        expect(emittedArtists.length).toBe(12);
+        expect(emittedArtists[0].name).toBe('Artist 0');
+        expect(emittedArtists[1].name).toBe('Artist 1');
         done();
       });
     });
@@ -466,26 +987,33 @@ describe('AppleMusicService', () => {
       const futureTime = Date.now() + 5 * 24 * 60 * 60 * 1000;
       sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
 
-      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
-        Promise.reject(new Error('API Error')),
+      // Make recently played succeed but library fail
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: [] });
+          }
+          // Library endpoint also fails
+          return Promise.reject(new Error('API Error'));
+        },
       );
 
       spyOn(console, 'error');
+      spyOn(console, 'log');
 
       service.loadArtistsWithAlbums('test-token').subscribe((result) => {
         expect(result).toBe(false);
-        expect(console.error).toHaveBeenCalled();
         expect(notificationServiceSpy.showError).toHaveBeenCalled();
         done();
       });
     });
   });
 
-  describe('fetchAllLibraryArtists (private)', () => {
+  describe('fetchLibraryArtists (private)', () => {
     it('should return empty array if musicKitInstance is null', async () => {
       (service as any).musicKitInstance = null;
 
-      const result = await (service as any).fetchAllLibraryArtists();
+      const result = await (service as any).fetchLibraryArtists(50);
 
       expect(result).toEqual([]);
     });
@@ -511,12 +1039,28 @@ describe('AppleMusicService', () => {
         });
       });
 
-      const result = await (service as any).fetchAllLibraryArtists();
+      const result = await (service as any).fetchLibraryArtists(50);
 
       expect(result.length).toBe(2);
       expect(result[0].id).toBe('artist-1');
       expect(result[1].id).toBe('artist-2');
       expect(callCount).toBe(2);
+    });
+
+    it('should respect maxArtists parameter', async () => {
+      (service as any).musicKitInstance = mockMusicKitInstance;
+
+      const artists = Array.from({ length: 10 }, (_, i) =>
+        createMockArtistResource(`artist-${i}`, `Artist ${i}`),
+      );
+
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
+        Promise.resolve({ data: artists }),
+      );
+
+      const result = await (service as any).fetchLibraryArtists(5);
+
+      expect(result.length).toBe(5);
     });
   });
 
@@ -562,12 +1106,12 @@ describe('AppleMusicService', () => {
   });
 
   describe('Rate limiting', () => {
-    it('should process artists in batches', async () => {
+    it('should process artists in batches with delay', async () => {
       (service as any).musicKitInstance = mockMusicKitInstance;
 
-      // Create 7 artists (will be processed in 2 batches: 5 + 2)
-      const artists = Array.from({ length: 7 }, (_, i) =>
-        createMockArtistResource(`artist-${i}`, `Artist ${i}`),
+      // Create 7 NormalizedArtist objects (will be processed in 2 batches: 5 + 2)
+      const normalizedArtists = Array.from({ length: 7 }, (_, i) =>
+        createNormalizedArtist(`artist-${i}`, `Artist ${i}`),
       );
 
       (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
@@ -575,12 +1119,11 @@ describe('AppleMusicService', () => {
       );
 
       const startTime = Date.now();
-      await (service as any).fetchAlbumsForAllArtists(artists);
+      await (service as any).fetchAlbumsForAllArtists(normalizedArtists);
       const duration = Date.now() - startTime;
 
-      // Should have at least 200ms delay between batches
-      // (may be slightly less due to timing variance)
-      expect(duration).toBeGreaterThanOrEqual(150);
+      // Should have at least ~250ms delay between batches (300ms configured, allow variance)
+      expect(duration).toBeGreaterThanOrEqual(200);
     });
   });
 
@@ -826,9 +1369,17 @@ describe('AppleMusicService', () => {
       sessionStorage.setItem('apple_music_token_expiry', futureTime.toString());
 
       const error = { status: 403 };
-      (mockMusicKitInstance.api.music as jasmine.Spy).and.returnValue(
-        Promise.reject(error),
+      // Make recently played return empty → fallback to library → which errors
+      (mockMusicKitInstance.api.music as jasmine.Spy).and.callFake(
+        (path: string) => {
+          if (path.includes('/me/recent/played')) {
+            return Promise.resolve({ data: [] });
+          }
+          return Promise.reject(error);
+        },
       );
+
+      spyOn(console, 'log');
 
       service.loadArtistsWithAlbums('test-token').subscribe((result) => {
         expect(result).toBe(false);

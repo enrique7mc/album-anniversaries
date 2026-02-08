@@ -15,12 +15,14 @@ import { environment } from '../../environments/environment';
 const STORAGE_KEY_TOKEN = 'apple_music_token';
 const STORAGE_KEY_TOKEN_EXPIRY = 'apple_music_token_expiry';
 const TOKEN_EXPIRY_MS = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds
-const RATE_LIMIT_BATCH_SIZE = 1; // Sequential requests to avoid 429s
-const RATE_LIMIT_DELAY_MS = 500; // 500ms between requests
+const RATE_LIMIT_BATCH_SIZE = 5; // Parallel requests per batch (safe with bounded N)
+const RATE_LIMIT_DELAY_MS = 300; // 300ms between batches
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000; // Start with 1s, exponential backoff
 const API_LIMIT = 100;
-const MAX_ARTISTS = environment.maxArtists || Infinity;
+const MIN_ARTISTS_THRESHOLD = 10; // Minimum recently played artists before fallback
+const LIBRARY_ARTIST_CAP = environment.maxArtists || 50; // Cap for library fallback
+const RECENTLY_PLAYED_LIMIT = 30; // Max items from recently played endpoint
 const STOREFRONT = 'us';
 
 // Image sizes for artwork conversion
@@ -61,12 +63,30 @@ interface AppleMusicResource<T> {
     catalog?: {
       data?: Array<{ id: string; type: string }>;
     };
+    artists?: {
+      data?: Array<{
+        id: string;
+        type: string;
+        attributes?: AppleMusicArtistAttributes;
+      }>;
+    };
   };
 }
 
 interface AppleMusicResponse<T> {
   data?: AppleMusicResource<T>[];
   next?: string;
+}
+
+/**
+ * Lightweight carrier for artist info from both recently-played and library paths.
+ * Uses catalog IDs (not library r.xxxxx IDs) so album fetching works directly.
+ */
+interface NormalizedArtist {
+  catalogId: string;
+  name: string;
+  artwork?: AppleMusicArtwork;
+  url?: string;
 }
 
 interface DeveloperTokenResponse {
@@ -197,9 +217,9 @@ export class AppleMusicService implements MusicService {
       return of(false);
     }
 
-    return from(this.fetchAllLibraryArtists()).pipe(
-      switchMap((libraryArtists) =>
-        this.fetchAlbumsForAllArtists(libraryArtists),
+    return from(this.fetchArtists()).pipe(
+      switchMap((normalizedArtists) =>
+        this.fetchAlbumsForAllArtists(normalizedArtists),
       ),
       map((artists) => {
         this.artistsSubject.next(artists);
@@ -213,16 +233,121 @@ export class AppleMusicService implements MusicService {
   }
 
   /**
+   * Orchestrates artist fetching: tries recently played first, falls back to library.
+   *
+   * Strategy:
+   * 1. Fetch recently played items → extract unique artists (catalog IDs)
+   * 2. If enough artists (>= MIN_ARTISTS_THRESHOLD), use them
+   * 3. Otherwise, fall back to library artists (capped at LIBRARY_ARTIST_CAP)
+   */
+  private async fetchArtists(): Promise<NormalizedArtist[]> {
+    const recentArtists = await this.fetchRecentlyPlayedArtists();
+
+    if (recentArtists.length >= MIN_ARTISTS_THRESHOLD) {
+      return recentArtists;
+    }
+
+    console.log(
+      `[AppleMusicService] Recently played yielded ${recentArtists.length} artists (< ${MIN_ARTISTS_THRESHOLD}), falling back to library`,
+    );
+
+    const libraryArtists = await this.fetchLibraryArtists(LIBRARY_ARTIST_CAP);
+    return libraryArtists.map((artist) => {
+      const catalogId = this.getCatalogArtistId(artist);
+      return {
+        catalogId: catalogId || artist.id,
+        name: artist.attributes?.name || 'Unknown Artist',
+        artwork: artist.attributes?.artwork,
+        url: artist.attributes?.url,
+      };
+    });
+  }
+
+  /**
+   * Fetches recently played items and extracts unique artists.
+   * Uses the /v1/me/recent/played endpoint which returns songs, albums, stations, etc.
+   * Extracts artist info from song/album relationships (catalog IDs).
+   *
+   * @returns Deduplicated array of NormalizedArtist from recently played items
+   */
+  private async fetchRecentlyPlayedArtists(): Promise<NormalizedArtist[]> {
+    if (!this.musicKitInstance) {
+      return [];
+    }
+
+    try {
+      const rawResponse = await this.musicKitInstance.api.music(
+        `/v1/me/recent/played?limit=${RECENTLY_PLAYED_LIMIT}`,
+      );
+
+      const response = this.unwrapResponse<any>(rawResponse);
+
+      if (!response?.data || !Array.isArray(response.data)) {
+        return [];
+      }
+
+      const artistMap = new Map<string, NormalizedArtist>();
+
+      for (const resource of response.data) {
+        const artists = this.extractArtistsFromResource(resource);
+        for (const artist of artists) {
+          if (!artistMap.has(artist.catalogId)) {
+            artistMap.set(artist.catalogId, artist);
+          }
+        }
+      }
+
+      return Array.from(artistMap.values());
+    } catch (error) {
+      console.warn(
+        '[AppleMusicService] Failed to fetch recently played, will fall back to library:',
+        error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Extracts artist info from a recently played resource.
+   * Songs and albums have artist relationships; stations and playlists do not.
+   */
+  private extractArtistsFromResource(
+    resource: AppleMusicResource<any>,
+  ): NormalizedArtist[] {
+    const type = resource.type;
+
+    // Only songs and albums have artist relationships
+    if (type !== 'songs' && type !== 'albums') {
+      return [];
+    }
+
+    const artistsData = resource.relationships?.artists?.data;
+    if (!artistsData || !Array.isArray(artistsData)) {
+      return [];
+    }
+
+    return artistsData
+      .filter((a) => a.id)
+      .map((a) => ({
+        catalogId: a.id,
+        name: a.attributes?.name || 'Unknown Artist',
+        artwork: a.attributes?.artwork,
+        url: a.attributes?.url,
+      }));
+  }
+
+  /**
    * Fetches library artists from Apple Music with their catalog relationships.
    * Handles pagination via 'next' property.
-   * Currently limited to MAX_ARTISTS to avoid rate limiting during development.
    *
    * NOTE: Library artist IDs (r.xxxxx) differ from catalog IDs.
    * We request the 'catalog' relationship to get the catalog artist ID for album fetching.
+   *
+   * @param maxArtists - Maximum number of artists to fetch
    */
-  private async fetchAllLibraryArtists(): Promise<
-    AppleMusicResource<AppleMusicArtistAttributes>[]
-  > {
+  private async fetchLibraryArtists(
+    maxArtists: number,
+  ): Promise<AppleMusicResource<AppleMusicArtistAttributes>[]> {
     if (!this.musicKitInstance) {
       return [];
     }
@@ -230,9 +355,9 @@ export class AppleMusicService implements MusicService {
     const allArtists: AppleMusicResource<AppleMusicArtistAttributes>[] = [];
     // Include catalog relationship to get catalog artist IDs
     let nextUrl: string | undefined =
-      `/v1/me/library/artists?limit=${Math.min(API_LIMIT, MAX_ARTISTS)}&include=catalog`;
+      `/v1/me/library/artists?limit=${Math.min(API_LIMIT, maxArtists)}&include=catalog`;
 
-    while (nextUrl && allArtists.length < MAX_ARTISTS) {
+    while (nextUrl && allArtists.length < maxArtists) {
       const rawResponse = await this.musicKitInstance.api.music(nextUrl);
 
       // MusicKit v3 may wrap the response in a 'data' property
@@ -244,46 +369,41 @@ export class AppleMusicService implements MusicService {
         allArtists.push(...response.data);
       }
 
-      // Stop if we've reached MAX_ARTISTS
-      if (allArtists.length >= MAX_ARTISTS) {
+      // Stop if we've reached the cap
+      if (allArtists.length >= maxArtists) {
         break;
       }
 
       nextUrl = response?.next;
     }
 
-    // Trim to MAX_ARTISTS if we fetched more
-    return allArtists.slice(0, MAX_ARTISTS);
+    // Trim to maxArtists if we fetched more
+    return allArtists.slice(0, maxArtists);
   }
 
   /**
-   * Fetches albums for all artists with rate limiting.
+   * Fetches albums for all normalized artists with rate limiting.
    * Batches requests to avoid throttling.
-   * Uses catalog artist ID (from relationships) for album fetching.
+   * Uses catalog artist ID directly from NormalizedArtist.
    */
   private async fetchAlbumsForAllArtists(
-    libraryArtists: AppleMusicResource<AppleMusicArtistAttributes>[],
+    normalizedArtists: NormalizedArtist[],
   ): Promise<Artist[]> {
     const artists: Artist[] = [];
 
     // Process artists in batches
-    for (let i = 0; i < libraryArtists.length; i += RATE_LIMIT_BATCH_SIZE) {
-      const batch = libraryArtists.slice(i, i + RATE_LIMIT_BATCH_SIZE);
+    for (let i = 0; i < normalizedArtists.length; i += RATE_LIMIT_BATCH_SIZE) {
+      const batch = normalizedArtists.slice(i, i + RATE_LIMIT_BATCH_SIZE);
 
       const batchResults = await Promise.all(
-        batch.map(async (libraryArtist) => {
-          // Extract catalog artist ID from relationships
-          // Library IDs (r.xxxxx) don't work with catalog API
-          const catalogArtistId = this.getCatalogArtistId(libraryArtist);
+        batch.map(async (normalizedArtist) => {
+          const albums = await this.fetchAlbumsForArtist(
+            normalizedArtist.catalogId,
+          );
 
-          let albums: AppleMusicResource<AppleMusicAlbumAttributes>[] = [];
-          if (catalogArtistId) {
-            albums = await this.fetchAlbumsForArtist(catalogArtistId);
-          }
-
-          const artist = this.mapToArtist(libraryArtist);
+          const artist = this.mapNormalizedToArtist(normalizedArtist);
           artist.albums = albums.map((album) =>
-            this.mapToAlbum(album, catalogArtistId || libraryArtist.id),
+            this.mapToAlbum(album, normalizedArtist.catalogId),
           );
           return artist;
         }),
@@ -292,7 +412,7 @@ export class AppleMusicService implements MusicService {
       artists.push(...batchResults);
 
       // Add delay between batches (except for last batch)
-      if (i + RATE_LIMIT_BATCH_SIZE < libraryArtists.length) {
+      if (i + RATE_LIMIT_BATCH_SIZE < normalizedArtists.length) {
         await this.delay(RATE_LIMIT_DELAY_MS);
       }
     }
@@ -419,6 +539,21 @@ export class AppleMusicService implements MusicService {
     }
 
     return typeof err.message === 'string' && err.message.includes('429');
+  }
+
+  /**
+   * Maps a NormalizedArtist to the shared Artist model.
+   */
+  private mapNormalizedToArtist(normalized: NormalizedArtist): Artist {
+    return {
+      id: normalized.catalogId,
+      name: normalized.name,
+      href: '',
+      popularity: 0,
+      images: this.mapArtwork(normalized.artwork),
+      external_url: normalized.url || '',
+      albums: [],
+    };
   }
 
   /**
